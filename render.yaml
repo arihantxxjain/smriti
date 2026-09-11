@@ -1,0 +1,19 @@
+services:
+  # Unified Full-Stack Service (FastAPI + Embedded React PWA)
+  - type: web
+    name: smriti-dementia-care
+    runtime: python
+    region: singapore # Closest to North East India
+    plan: free
+    buildCommand: "npm --prefix frontend install && npm --prefix frontend run build && pip install -r backend/requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: MONGO_URL
+        sync: false
+        value: "mongodb://localhost:27017/smriti" # Falls back to in-memory mongomock if external MongoDB URI not supplied
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REACT_APP_BACKEND_URL
+        value: ""

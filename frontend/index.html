@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/smriti-icon-192.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#2D4A3E" />
+    <meta name="description" content="Voice-first, mobile-responsive AI dementia care web app for elderly patients in NER India (SIH26003/MDoNER)" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Smriti — AI Dementia Care (স্মৃতি)</title>
+  </head>
+  <body class="bg-patient-bg text-patient-text antialiased selection:bg-red-200">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.log('SW registration skipped in development:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

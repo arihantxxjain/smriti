@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#2D4A3E" rx="80" />
+  <!-- Gamusa red/white woven band -->
+  <rect y="420" width="512" height="32" fill="#B91C1C" />
+  <rect y="432" width="512" height="8" fill="#FFFFFF" stroke="#B91C1C" stroke-dasharray="20 20" />
+  <!-- Brain / Lotus icon in gold/white -->
+  <circle cx="256" cy="220" r="120" fill="#FFFFFF" opacity="0.15" />
+  <path d="M256 130 C185 130 160 180 160 220 C160 275 200 315 256 340 C312 315 352 275 352 220 C352 180 327 130 256 130 Z" fill="#FDE047" />
+  <circle cx="256" cy="220" r="36" fill="#2D4A3E" />
+  <text x="256" y="395" font-size="44" font-family="sans-serif" font-weight="bold" fill="#FFFFFF" text-anchor="middle">স্মৃতি • SMRITI</text>
+</svg>
