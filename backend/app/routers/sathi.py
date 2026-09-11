@@ -13,14 +13,14 @@ router = APIRouter(prefix="/sathi", tags=["sathi"])
 DISTRESS_PATTERNS = [
     r"where am i", r"who are you", r"lost", r"scared", r"fear", r"help me", r"die",
     r"want to go home", r"take me home", r"don't know", r"confused", r"stolen",
-    r"ক'ত আছো", r"মই ক'ত", r"কোন তুমি", r"ডৰ লাগিছে", r"ভয় লাগিছে", r"পাহৰি গ'লো", r"ঘৰলৈ যাম",
+    r"ক'ত আছো", r"মই ক'ত", r"কোন তুমি", r"ডৰ লাগিছে", r"ভয় লাগিছে", r"পাহৰি গ'লো", r"ঘৰলৈ যাম",
     r"कहाँ हूँ", r"डर लग रहा", r"घर जाना", r"भूल गया", r"मदद करो", r"बचाओ"
 ]
 
 FALLBACK_CALM_RESPONSES = {
     "as": (
         "মই আপোনাৰ লগত আছো। আপুনি আপোনাৰ নিজৰ ঘৰতে সুৰক্ষিত আছে। "
-        "চিন্তা নকৰিব, আহক আমি অলপ জিৰণি লওঁ। আপুনি এতিয়া একাপ গৰম চাহ খাবনে?"
+        "চিন্তা নকৰিব, আহক আমি অলপ জিৰণি লওঁ। আপুনি এতিয়া একাপ গৰম চাহ খাবনে?"
     ),
     "hi": (
         "मैं आपके साथ हूँ। आप अपने घर पर पूरी तरह सुरक्षित हैं। "
@@ -40,33 +40,77 @@ def detect_distress(text: str) -> bool:
     return False
 
 def build_demo_reply(message: str, lang: str, patient_name: str, family_names: str, fav_food: str, fav_places: str) -> str:
-    """No-key demo companion: predictable, private, and useful for SIH judging."""
-    text = message.lower()
-    if any(word in text for word in ("medicine", "medication", "tablet", "medicine", "দৰব", "ঔষধ", "दवा")):
+    """Rich, empathetic offline intent matcher for SIH evaluation and no-key scenarios."""
+    text = message.lower().strip()
+
+    # 1. Greetings & Well-being
+    if any(w in text for w in ("hello", "hi", "namaskar", "kene asa", "kene ase", "how are you", "kaise ho", "নমস্কাৰ", "কেমন", "नमस्ते", "हाल")):
         replies = {
-            "as": "আপোনাৰ আজিৰ ঔষধৰ সময়সূচী চাবলৈ ‘Today’s Reminders’ খোলক। সন্দেহ থাকিলে পৰিয়ালৰ সদস্যক সুধিব।",
-            "hi": "आज की दवा का समय देखने के लिए ‘Today’s Reminders’ खोलें। कोई संदेह हो तो परिवार के सदस्य से पूछें।",
-            "en": "Open Today’s Reminders to check your medicine schedule. If you are unsure, please ask a family member."
+            "as": f"নমস্কাৰ {patient_name} ডাঙৰীয়া! মই ভালে আছো। আপুনি আজি কেনে অনুভৱ কৰিছে? আপোনাৰ দিনটো আনন্দময় হওক।",
+            "hi": f"नमस्ते {patient_name} जी! मैं बिल्कुल ठीक हूँ। आज आपकी तबियत कैसी है? आशा है आपका दिन मंगलमय हो।",
+            "en": f"Namaskar {patient_name}! I am doing very well, thank you. How are you feeling today?"
         }
         return replies.get(lang, replies["en"])
-    if any(word in text for word in ("family", "son", "daughter", "photo", "পরিয়াল", "ছবি", "परिवार", "फोटो")):
+
+    # 2. Time & Date
+    if any(w in text for w in ("time", "date", "clock", "today", "somoy", "baje", "দিন", "সময়", "বাজে", "समय", "तारीख")):
         replies = {
-            "as": f"{patient_name} ডাঙৰীয়া, আপোনাৰ পৰিয়াল {family_names} আপোনাক বহুত মৰম কৰে। Memory Aids খুলি তেওঁলোকৰ ছবিবোৰ চাওঁ আহক।",
-            "hi": f"{patient_name} जी, आपका परिवार {family_names} आपको बहुत प्यार करता है। आइए Memory Aids में उनकी तस्वीरें देखें।",
-            "en": f"{patient_name}, your family {family_names} cares for you deeply. Let us open Memory Aids and look at their photos."
+            "as": "বৰ্তমান সময় আৰু তাৰিখ চাবলৈ স্ক্ৰীণৰ ওপৰত বাওঁফালে থকা ঘড়ীটো চাওক।",
+            "hi": "वर्तमान समय और तारीख देखने के लिए स्क्रीन के ऊपर बाईं ओर घड़ी देखें।",
+            "en": "You can check the current time and date in IST on the top-left corner of your screen."
         }
         return replies.get(lang, replies["en"])
-    if any(word in text for word in ("food", "tea", "hungry", "চাহ", "খাব", "चाय", "खाना")):
+
+    # 3. Medicine & Health
+    if any(w in text for w in ("medicine", "medication", "tablet", "pill", "doctor", "দৰব", "ঔষধ", "দবা", "दवा", "गोली", "डॉक्टर")):
         replies = {
-            "as": f"এটা ভাল কথা। আপোনাৰ পছন্দৰ {fav_food} মনত আছে। সম্ভৱ হ’লে পৰিয়ালৰ কাকো একেলগে জলপান খাবলৈ কওক।",
-            "hi": f"यह अच्छी बात है। आपको {fav_food} पसंद है। संभव हो तो परिवार के किसी सदस्य के साथ कुछ खाइए।",
-            "en": f"That sounds nice. You enjoy {fav_food}. If possible, ask a family member to share a snack or tea with you."
+            "as": f"আপোনাৰ আজিৰ ঔষধৰ তালিকা চাবলৈ ‘Today’s Reminders’ চাওক। কোনো অসুবিধা পালে {family_names}ক কওক।",
+            "hi": f"अपनी आज की दवाइयाँ देखने के लिए ‘Today’s Reminders’ खोलें। कोई समस्या हो तो {family_names} को बताएं।",
+            "en": f"Please check 'Today's Reminders' for your scheduled medications. If you have any doubt, let {family_names} know."
         }
         return replies.get(lang, replies["en"])
+
+    # 4. Family & Photos
+    if any(w in text for w in ("family", "son", "daughter", "children", "photo", "wife", "husband", "পৰিয়াল", "ল’ৰা", "ছোৱালী", "ছবি", "परिवार", "बेटा", "बेटी", "तस्वीर")):
+        replies = {
+            "as": f"{patient_name} ডাঙৰীয়া, আপোনাৰ মৰমৰ পৰিয়াল {family_names} সদায় আপোনাৰ লগত আছে। Memory Aids ত গৈ তেওঁলোকৰ পুৰণি ফটো চাওঁ আহক।",
+            "hi": f"{patient_name} जी, आपका प्यारा परिवार {family_names} हमेशा आपके साथ है। Memory Aids में चलकर उनकी पुरानी तस्वीरें देखते हैं।",
+            "en": f"{patient_name}, your loving family ({family_names}) cares for you deeply. Let us look at your family photos in Memory Aids."
+        }
+        return replies.get(lang, replies["en"])
+
+    # 5. Food & Tea
+    if any(w in text for w in ("food", "tea", "chai", "lunch", "dinner", "breakfast", "hungry", "চাহ", "ভাত", "খোৱা", "জলপান", "चाय", "खाना", "भूख")):
+        replies = {
+            "as": f"আপুনি {fav_food} ভাল পায় বুলি মনত আছে। আহক এতিয়া একাপ গৰম অসম চাহ খাওঁ।",
+            "hi": f"मुझे याद है आपको {fav_food} बहुत पसंद है। चलिए एक कप ताज़ा चाय पीते हैं।",
+            "en": f"I remember you love {fav_food}! How about having a refreshing cup of tea now?"
+        }
+        return replies.get(lang, replies["en"])
+
+    # 6. Games & Activities / Boredom
+    if any(w in text for w in ("game", "play", "exercise", "bored", "খেল", "ব্যায়াম", "মন ভাল নাই", "खेल", "बोर")):
+        replies = {
+            "as": "আহক আমি স্মৃতি মিলোৱা খেল (Memory Match) বা চিনাকি বস্তুৰ খেল খেলি অলপ আনন্দ লওঁ!",
+            "hi": "चलिए थोड़ा मनोरंजन करते हैं! आप Memory Match या सांस्कृतिक वस्तु पहचान खेल खेल सकते हैं।",
+            "en": "Let's refresh your mind! You can play Memory Match or the Cultural Recognition game."
+        }
+        return replies.get(lang, replies["en"])
+
+    # 7. Stories & Memories of North East
+    if any(w in text for w in ("story", "kahini", "sadhu", "past", "childhood", "কাহিনী", "সাধু", "পুৰণি", "कहानी", "याद")):
+        replies = {
+            "as": f"{fav_places}ৰ সুন্দৰ স্মৃতি আৰু আমাৰ বৰলুইতৰ পাৰৰ দিনবোৰৰ কথা মনত পৰিলে মনটো আনন্দৰে ভৰি পৰে।",
+            "hi": f"{fav_places} की खूबसूरत यादें और पुराने दिन वाकई बहुत यादगार हैं।",
+            "en": f"Fond memories of {fav_places} and the peaceful days always bring warmth to the heart."
+        }
+        return replies.get(lang, replies["en"])
+
+    # Default gentle, acknowledging response
     replies = {
-        "as": f"নমস্কাৰ {patient_name} ডাঙৰীয়া। মই আপোনাৰ কথা শুনি আছো। আজি {fav_places}ৰ এটা মৰমলগা স্মৃতি মনত পৰে নেকি?",
-        "hi": f"नमस्ते {patient_name} जी। मैं आपकी बात सुन रहा हूँ। क्या आज आपको {fav_places} की कोई प्यारी याद आ रही है?",
-        "en": f"Namaskar {patient_name}. I am listening. Does a happy memory of {fav_places} come to mind today?"
+        "as": f"মই বুজি পাইছো {patient_name} ডাঙৰীয়া। মই সদায় আপোনাৰ কথা শুনিবলৈ সাজু। মোক আপোনাৰ পৰিয়াল, কাম বা পছন্দৰ বস্তুৰ বিষয়ে কওক।",
+        "hi": f"मैं समझ रहा हूँ {patient_name} जी। मैं आपकी बात सुनने के लिए हमेशा यहाँ हूँ। आप मुझसे अपने परिवार, काम या अपनी पसंद के बारे में कुछ भी पूछ सकते हैं।",
+        "en": f"I hear you, {patient_name}. I am always here to listen and assist you. Feel free to ask about your family, reminders, or stories."
     }
     return replies.get(lang, replies["en"])
 
@@ -117,7 +161,7 @@ async def chat_with_sathi(payload: SathiChatRequest, current_user: dict = Depend
     # If distress detected, return high-priority reassuring response
     if is_distressed:
         reassurance = {
-            "as": f"নমস্কাৰ {patient_name} ডাঙৰীয়া। আপুনি আপোনাৰ চিনাকি ঘৰতে সুৰক্ষিত আছে। আপোনাৰ পৰিয়াল {family_names} আপোনাৰ কাষতেই আছে। একো চিন্তা নকৰিব, আহক অলপ বহক।",
+            "as": f"নমস্কাৰ {patient_name} ডাঙৰীয়া। আপুনি আপোনাৰ চিনাকি ঘৰতে সুৰক্ষিত আছে। আপোনাৰ পৰিয়াল {family_names} আপোনাৰ কাষতেই আছে। একো চিন্তা নকৰিব, আহক অলপ বহক।",
             "hi": f"नमस्ते {patient_name} जी। आप बिल्कुल सुरक्षित हैं। आपका परिवार {family_names} आपके साथ है। चिंता मत कीजिए, शांत रहिए।",
             "en": f"Namaskar {patient_name}. You are completely safe in your home in {fav_places}. Your family {family_names} is close by. Take a gentle breath, you are safe."
         }
@@ -139,14 +183,19 @@ async def chat_with_sathi(payload: SathiChatRequest, current_user: dict = Depend
         f"using positive grounding memories. NEVER show technical or medical jargon."
     )
 
-    if settings.OPENAI_API_KEY:
+    # 1. Attempt Free Groq API first (Llama 3.3 70B / 3.1 8B - ultra fast & free)
+    api_key = settings.GROQ_API_KEY or settings.OPENAI_API_KEY
+    api_url = "https://api.groq.com/openai/v1/chat/completions" if settings.GROQ_API_KEY else "https://api.openai.com/v1/chat/completions"
+    model_name = "llama-3.3-70b-versatile" if settings.GROQ_API_KEY else "gpt-4o-mini"
+
+    if api_key:
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
+            async with httpx.AsyncClient(timeout=2.5) as client:
                 res = await client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
+                    api_url,
+                    headers={"Authorization": f"Bearer {api_key}"},
                     json={
-                        "model": "gpt-4o-mini",
+                        "model": model_name,
                         "messages": [
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": payload.message}
@@ -160,9 +209,9 @@ async def chat_with_sathi(payload: SathiChatRequest, current_user: dict = Depend
                     bot_text = data["choices"][0]["message"]["content"].strip()
                     return {"reply": bot_text, "distress_flagged": False, "language": lang}
         except Exception:
-            # Fall through silently to calm fallback on timeout or error
-            pass
+            pass  # Fall through to rich demo replies on timeout or network issue
 
+    # 2. Rich Offline Question Set (zero API key fallback)
     reply = build_demo_reply(payload.message, lang, patient_name, family_names, fav_food, fav_places)
 
     return {

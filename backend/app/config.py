@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     BHASHINI_API_KEY: str = os.getenv("BHASHINI_API_KEY", "")
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     EMERGENT_STORAGE_PATH: str = os.getenv("EMERGENT_STORAGE_PATH", "./uploads")
 
     class Config:
