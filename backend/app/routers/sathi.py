@@ -186,7 +186,7 @@ async def chat_with_sathi(payload: SathiChatRequest, current_user: dict = Depend
     # 1. Attempt Free Groq API first (Llama 3.3 70B / 3.1 8B - ultra fast & free)
     api_key = settings.GROQ_API_KEY or settings.OPENAI_API_KEY
     api_url = "https://api.groq.com/openai/v1/chat/completions" if settings.GROQ_API_KEY else "https://api.openai.com/v1/chat/completions"
-    model_name = "llama-3.3-70b-versatile" if settings.GROQ_API_KEY else "gpt-4o-mini"
+    model_name = "groq/compound-mini" if settings.GROQ_API_KEY else "gpt-4o-mini"
 
     if api_key:
         try:
