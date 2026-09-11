@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    EMERGENT_LLM_KEY: str = os.getenv("EMERGENT_LLM_KEY", "")
+    INTEGRATION_PROXY_URL: str = os.getenv("INTEGRATION_PROXY_URL", "https://integrations.emergentagent.com")
     EMERGENT_STORAGE_PATH: str = os.getenv("EMERGENT_STORAGE_PATH", "./uploads")
 
     class Config:
