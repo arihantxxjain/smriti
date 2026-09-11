@@ -211,7 +211,7 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center">
-                      <span className="text-3xl font-black text-amber-300 mb-1">স্মৃতি</span>
+                      <span className="text-3xl font-black text-amber-300 mb-1">Smriti</span>
                       <span className="text-xs font-bold uppercase tracking-widest text-stone-200">Tap to Flip</span>
                     </div>
                   )}
