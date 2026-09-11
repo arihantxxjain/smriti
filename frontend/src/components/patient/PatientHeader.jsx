@@ -23,6 +23,8 @@ export default function PatientHeader({ patientName = "Elder", patientCode = "",
 
   const getGreeting = () => {
     if (language === "as") return `নমস্কাৰ, ${patientName} ডাঙৰীয়া`;
+    if (language === "bn") return `নমস্কার, ${patientName}`;
+    if (language === "mni") return `খুরুমজরি, ${patientName}`;
     if (language === "hi") return `नमस्ते, ${patientName} जी`;
     return `Namaskar, ${patientName}`;
   };
@@ -79,6 +81,24 @@ export default function PatientHeader({ patientName = "Elder", patientCode = "",
               }`}
             >
               অসমীয়া
+            </button>
+            <button
+              data-testid="lang-bn"
+              onClick={() => setLanguage("bn")}
+              className={`touch-target px-3 py-2 text-base font-bold rounded ${
+                language === "bn" ? "bg-red-700 text-white" : "text-stone-800 hover:bg-stone-200"
+              }`}
+            >
+              বাংলা
+            </button>
+            <button
+              data-testid="lang-mni"
+              onClick={() => setLanguage("mni")}
+              className={`touch-target px-3 py-2 text-base font-bold rounded ${
+                language === "mni" ? "bg-red-700 text-white" : "text-stone-800 hover:bg-stone-200"
+              }`}
+            >
+              মৈতৈ
             </button>
             <button
               data-testid="lang-en"

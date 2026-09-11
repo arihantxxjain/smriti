@@ -41,7 +41,10 @@ export const translations = {
     enter_pin: "৪-অংকৰ PIN দিয়ক",
     login_btn: "প্ৰৱেশ কৰক",
     caregiver_portal: "শুশ্ৰূষাকাৰী প'ৰ্টেল",
-    demo_data_notice: "ডেমো তথ্য — চিকিৎসা পৰামৰ্শৰ বিকল্প নহয়।"
+    demo_data_notice: "ডেমো তথ্য — চিকিৎসা পৰামৰ্শৰ বিকল্প নহয়।",
+    caregiver_title: "স্মৃতি • কেয়াৰগিভাৰ ড্যাশ্বৰ্ড",
+    go_to_patient: "ৰোগী ভিউ",
+    logged_in_as: "লগইন হৈ আছে:"
   },
   en: {
     app_name: "Smriti",
@@ -85,7 +88,10 @@ export const translations = {
     enter_pin: "Enter 4-Digit Security PIN",
     login_btn: "Sign In",
     caregiver_portal: "Caregiver Portal",
-    demo_data_notice: "Demo data — not for clinical use."
+    demo_data_notice: "Demo data — not for clinical use.",
+    caregiver_title: "Smriti • Caregiver Dashboard",
+    go_to_patient: "Go to Patient View",
+    logged_in_as: "Logged in as:"
   },
   hi: {
     app_name: "स्मृति",
@@ -129,6 +135,45 @@ export const translations = {
     enter_pin: "4-अंकों का PIN दर्ज करें",
     login_btn: "प्रवेश करें",
     caregiver_portal: "केयरगिवर पोर्टल",
-    demo_data_notice: "डेमो डेटा — नैदानिक उपयोग के लिए नहीं।"
+    demo_data_notice: "डेमो डेटा — नैदानिक उपयोग के लिए नहीं।",
+    caregiver_title: "स्मृति • केयरगिवर डैशबोर्ड",
+    go_to_patient: "मरीज व्यू",
+    logged_in_as: "लॉग इन:"
+  },
+  bn: {
+    app_name: "স্মৃতি", tagline: "প্রবীণদের জন্য কণ্ঠ-ভিত্তিক স্মৃতি সহায়ক", namaskar: "নমস্কার", today: "আজ",
+    sos_button: "জরুরি SOS", sos_confirm_title: "জরুরি সংকেত পাঠাবেন কি?",
+    sos_confirm_desc: "আপনার পরিবার ও যত্নকারীকে এখনই আপনার অবস্থান ও জরুরি বার্তা পাঠানো হবে।",
+    sos_sending: "সংকেত পাঠানো হচ্ছে...", sos_sent: "সংকেত পাঠানো হয়েছে!", sos_cancel: "বাতিল", sos_send_now: "হ্যাঁ, এখনই পাঠান",
+    games_title: "মনের ব্যায়াম ও খেলা", memory_match: "স্মৃতি মেলানোর খেলা", memory_match_desc: "কার্ড উল্টে চেনা সাংস্কৃতিক জোড়া খুঁজুন",
+    attention_game: "মনোযোগ পরীক্ষা", attention_game_desc: "অমিল বা সঠিক উত্তরটি বেছে নিন",
+    routine_game: "দৈনিক কাজের ক্রম", routine_game_desc: "সকাল থেকে রাত পর্যন্ত কাজগুলো ক্রমানুসারে সাজান",
+    recognition_game: "সাংস্কৃতিক বস্তু চেনা", recognition_game_desc: "উত্তর-পূর্ব ভারতের ঐতিহ্যবাহী জিনিস চিনুন",
+    reminders_title: "আজকের সময়সূচি ও ওষুধ", no_reminders: "আজকের কোনো কাজ বাকি নেই।", completed: "সম্পন্ন", pending: "বাকি আছে",
+    sathi_button: "সাথীর সাথে কথা বলুন", sathi_title: "সাথী — AI সঙ্গী", sathi_subtitle: "আপনার পরিবার ও জীবনের সাথে মানানসই সঙ্গী",
+    speak_now: "কথা বলুন", type_message: "এখানে বার্তা লিখুন...", send: "পাঠান", listening: "শুনছি... বলুন",
+    memory_aids: "স্মৃতি ও পারিবারিক ছবি", memory_aids_desc: "পুরোনো পারিবারিক মুহূর্ত শুনুন ও দেখুন", read_story: "গল্প শুনুন",
+    logout: "প্রস্থান", offline_notice: "ইন্টারনেট নেই — অফলাইনে কাজ চলছে।", login_title: "রোগী প্রবেশ",
+    enter_code: "৬–৮ অক্ষরের রোগী কোড দিন", enter_pin: "৪ সংখ্যার PIN দিন", login_btn: "প্রবেশ করুন",
+    caregiver_portal: "যত্নকারী পোর্টাল", demo_data_notice: "ডেমো তথ্য — চিকিৎসা পরামর্শের বিকল্প নয়।",
+    caregiver_title: "স্মৃতি • কেয়ারগিভার ড্যাশবোর্ড", go_to_patient: "রোগী ভিউ", logged_in_as: "লগইন করা আছে:"
+  },
+  mni: {
+    app_name: "স্মৃতি", tagline: "অহলশিংগী খোঞ্জেলগী স্মৃতি মতেং", namaskar: "খুরুমজরি", today: "ঙসি",
+    sos_button: "অকনবা SOS", sos_confirm_title: "অকনবা পাউ থাগদরা?",
+    sos_confirm_desc: "অদোমগী ইমুংদা মফম অমসুং অকনবা পাউ থাগনি।",
+    sos_sending: "পাউ থারি...", sos_sent: "পাউ থাখ্রে!", sos_cancel: "তোকসি", sos_send_now: "হোই, হৌজিক থাবিয়ু",
+    games_title: "ৱাখলগী এক্সরসাইজ অমসুং শান্নপোৎ", memory_match: "স্মৃতি চান্নবা শান্নবা", memory_match_desc: "কার্দ ওন্থোক্তুনা চান্নবা জোড়া থিবিয়ু",
+    attention_game: "ৱাখল চংবা চাংয়েং", attention_game_desc: "মান্নদবা নত্রগা চুম্বা অপাম্বা খনবিয়ু",
+    routine_game: "নোংমগী থবক মথং-মনাও", routine_game_desc: "অয়ুকতগী নুমিদাংফাওবগী থবকশিং মথং-মনাও শেম্বিয়ু",
+    recognition_game: "নাৎকী পোৎলম শক্তাকপা", recognition_game_desc: "নোংপোক-অৱাংবা লমদমগী নাৎকী পোৎলমশিং খঙদোকপিয়ু",
+    reminders_title: "ঙসিগী থবক অমসুং হিদাক", no_reminders: "ঙসিগী থবক লৈতে।", completed: "লোইখ্রে", pending: "লেমহৌরি",
+    sathi_button: "সাথীগা ৱারি শানবিয়ু", sathi_title: "সাথী — AI মরুপ", sathi_subtitle: "অদোমগী ইমুংগী মরুপ",
+    speak_now: "ৱা ঙাংবিয়ু", type_message: "পাউ ইবিয়ু...", send: "থাবিয়ু", listening: "তাবা ঙম্লে... ঙাংবিয়ু",
+    memory_aids: "স্মৃতি অমসুং ফটো", memory_aids_desc: "নুংশিরবা ফীভমশিং য়েংবিয়ু", read_story: "ৱারি তাবিয়ু",
+    logout: "থোকপা", offline_notice: "ইন্টারনেট লৈতে — অফলাইনদা চৎথরি।", login_title: "অনাবা চংবা",
+    enter_code: "কোড ইবিয়ু", enter_pin: "PIN ইবিয়ু", login_btn: "চংবিয়ু",
+    caregiver_portal: "য়েংশিনবীরিবগী পোর্তাল", demo_data_notice: "দেমো দেতা।",
+    caregiver_title: "স্মৃতি • কেয়ারগিভার ড্যাশবোর্ড", go_to_patient: "অনাবাগী ভিউ", logged_in_as: "চংবা:"
   }
 };

@@ -3,7 +3,7 @@ import { Brain, Eye, ListOrdered, Sparkles, ChevronRight } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 
 export default function GameTiles({ onSelectGame }) {
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const games = [
     {
@@ -47,6 +47,11 @@ export default function GameTiles({ onSelectGame }) {
         <h2 className="text-2xl md:text-3xl font-black text-stone-900">
           {t("games_title")}
         </h2>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <button data-testid="games-lang-en" onClick={() => setLanguage("en")} className={`px-2.5 py-1 text-xs font-bold rounded ${language === 'en' ? 'bg-stone-800 text-white' : 'bg-stone-200 text-stone-700'}`}>EN</button>
+          <button data-testid="games-lang-hi" onClick={() => setLanguage("hi")} className={`px-2.5 py-1 text-xs font-bold rounded ${language === 'hi' ? 'bg-stone-800 text-white' : 'bg-stone-200 text-stone-700'}`}>हिंदी</button>
+          <button data-testid="games-lang-as" onClick={() => setLanguage("as")} className={`px-2.5 py-1 text-xs font-bold rounded ${language === 'as' ? 'bg-stone-800 text-white' : 'bg-stone-200 text-stone-700'}`}>অসমীয়া</button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

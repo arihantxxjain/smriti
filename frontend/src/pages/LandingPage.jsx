@@ -1,9 +1,34 @@
 import React from "react";
 import { User, ShieldCheck, Heart, Sparkles, Key, CheckCircle, ArrowRight } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function LandingPage({ onSelectPatient, onSelectCaregiver }) {
+  const { language, setLanguage } = useLanguage();
+  const langs = [
+    { code: "as", label: "অসমীয়া" },
+    { code: "bn", label: "বাংলা" },
+    { code: "mni", label: "মৈতৈ" },
+    { code: "en", label: "EN" },
+    { code: "hi", label: "हिंदी" },
+  ];
+
   return (
-    <div className="min-h-screen bg-patient-bg text-stone-900 flex flex-col justify-between p-4 sm:p-6">
+    <div className="relative min-h-screen bg-patient-bg text-stone-900 flex flex-col justify-between p-4 sm:p-6">
+      {/* Floating Language Switcher */}
+      <div data-testid="landing-lang-switcher" className="absolute top-4 right-4 z-20 flex items-center bg-white border-2 border-stone-300 rounded-lg p-1 shadow-sm">
+        {langs.map((l) => (
+          <button
+            key={l.code}
+            data-testid={`landing-lang-${l.code}`}
+            onClick={() => setLanguage(l.code)}
+            className={`px-2.5 py-1 text-xs font-bold rounded ${
+              language === l.code ? "bg-red-700 text-white" : "text-stone-800 hover:bg-stone-100"
+            }`}
+          >
+            {l.label}
+          </button>
+        ))}
+      </div>
       {/* Header Banner */}
       <header className="max-w-4xl w-full mx-auto text-center pt-8">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-100 border border-red-300 rounded-full text-red-900 font-bold text-sm mb-4">
