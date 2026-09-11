@@ -39,16 +39,7 @@ async def seed_database():
     if existing_patient:
         patient_id = existing_patient["_id"]
         patient_id_str = str(patient_id)
-        # Always guarantee DEMO01 demo credentials and lockout clearance
-        await db.patients.update_one(
-            {"_id": patient_id},
-            {"$set": {
-                "pin_hash": hash_pin("1234"),
-                "failed_login_attempts": 0,
-                "lockout_until": None
-            }}
-        )
-        print(f"[Seed] Existing demo patient found & credentials verified: {patient_code} (ID: {patient_id_str})")
+        print(f"[Seed] Existing demo patient found: {patient_code} (ID: {patient_id_str})")
     else:
         patient_doc = {
             "name": "Promod Baruah",

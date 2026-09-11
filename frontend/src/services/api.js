@@ -28,7 +28,7 @@ export async function apiRequest(endpoint, options = {}) {
       credentials: "include" // for httpOnly cookie
     });
 
-    if (response.status === 401 && !endpoint.includes("/login") && !endpoint.includes("/refresh") && !endpoint.includes("/register")) {
+    if (response.status === 401 && !endpoint.includes("/auth/login") && !endpoint.includes("/auth/refresh")) {
       // Attempt token refresh
       try {
         const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
@@ -128,10 +128,6 @@ export const api = {
   previewDigest: (patientId) => apiRequest(`/digest/preview/${patientId}`),
   sendDigest: (patientId) => apiRequest(`/digest/send/${patientId}`, { method: "POST" }),
 
-  // Audit
-  getAuditLogs: (patientId) => apiRequest(`/audit/${patientId}`),
-
   // Upload
   uploadFile: (formData) => apiRequest("/upload", { method: "POST", body: formData })
 };
-

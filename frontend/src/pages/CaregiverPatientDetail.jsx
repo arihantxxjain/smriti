@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import {
   ArrowLeft, Brain, Activity, Clock, ShieldAlert, Plus, Trash2,
   Mail, MapPin, KeyRound, User, BookOpen, Image, Calendar, CheckCircle2,
-  Upload, AlertTriangle, Check, Table, BarChart2, Info, FileText, X,
-  AlertOctagon, CheckCircle, ShieldCheck, History
+  Upload, AlertTriangle, Check
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { api } from "../services/api";
 import { formatISTDateTime, formatISTDate, getTodayISTDateString } from "../utils/dateUtils";
 import WeeklyDigestModal from "../components/caregiver/WeeklyDigestModal";
@@ -17,22 +16,8 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
   const [memories, setMemories] = useState([]);
   const [facts, setFacts] = useState([]);
   const [alerts, setAlerts] = useState([]);
-  const [auditLogs, setAuditLogs] = useState([]);
-  const [activeTab, setActiveTab] = useState("overview"); // overview, reminders, memories, facts, alerts, geofence, profile, audit
+  const [activeTab, setActiveTab] = useState("overview"); // overview, reminders, memories, facts, alerts, geofence, profile
   const [isDigestOpen, setIsDigestOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // View Mode for Chart vs Table
-  const [trendViewMode, setTrendViewMode] = useState("chart"); // 'chart' | 'table'
-
-  // Toast Notification State
-  const [toast, setToast] = useState(null);
-
-  // Delete Confirmation Modal State
-  const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'reminder'|'memory'|'fact', id, title }
-
-  // Alert Resolution Modal State
-  const [resolveTarget, setResolveTarget] = useState(null); // { alertId, note }
 
   // Forms states
   const [newPin, setNewPin] = useState("");
@@ -55,26 +40,19 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
   const [geoRadius, setGeoRadius] = useState(500);
   const [geoSaved, setGeoSaved] = useState(false);
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  };
-
   useEffect(() => {
     loadAllPatientData();
   }, [patientId]);
 
   const loadAllPatientData = async () => {
-    setIsLoading(true);
     try {
-      const [pRes, gamesRes, remRes, memRes, factsRes, alertsRes, auditRes] = await Promise.all([
+      const [pRes, gamesRes, remRes, memRes, factsRes, alertsRes] = await Promise.all([
         api.getPatient(patientId),
         api.getGameSessions(patientId),
         api.getReminders(patientId),
         api.getMemories(patientId),
         api.getFacts(patientId),
-        api.getAlerts(patientId),
-        api.getAuditLogs ? api.getAuditLogs(patientId).catch(() => []) : Promise.resolve([])
+        api.getAlerts(patientId)
       ]);
 
       setPatient(pRes);
@@ -83,7 +61,6 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
       setMemories(memRes || []);
       setFacts(factsRes || []);
       setAlerts(alertsRes || []);
-      setAuditLogs(auditRes || []);
 
       if (pRes?.geofence) {
         setGeoLat(pRes.geofence.center_lat || 26.7509);
@@ -92,9 +69,6 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
       }
     } catch (e) {
       console.error("Failed to load patient detail data:", e);
-      showToast("Failed to load full patient data", "error");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -105,15 +79,10 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
     try {
       await api.resetPatientPin(patientId, newPin.trim());
       setPinSuccess("PIN updated successfully! Lockout cleared.");
-      showToast("Security PIN updated and lockout reset.");
       setNewPin("");
-      if (api.getAuditLogs) {
-        const updatedLogs = await api.getAuditLogs(patientId).catch(() => []);
-        setAuditLogs(updatedLogs);
-      }
       setTimeout(() => setPinSuccess(""), 4000);
     } catch (err) {
-      showToast("Error resetting PIN: " + err.message, "error");
+      alert("Error resetting PIN: " + err.message);
     }
   };
 
@@ -130,21 +99,17 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
       });
       setReminders((prev) => [...prev, created]);
       setNewRemTitle("");
-      showToast(`Reminder "${created.title}" added successfully.`);
     } catch (err) {
-      showToast("Failed to add reminder: " + err.message, "error");
+      alert("Failed to add reminder: " + err.message);
     }
   };
 
-  const executeDeleteReminder = async (id) => {
+  const handleDeleteReminder = async (id) => {
     try {
       await api.deleteReminder(id);
       setReminders((prev) => prev.filter((r) => (r.id || r._id) !== id));
-      showToast("Reminder deleted successfully.");
     } catch (e) {
-      showToast("Failed to delete reminder", "error");
-    } finally {
-      setDeleteTarget(null);
+      alert("Failed to delete reminder");
     }
   };
 
@@ -158,21 +123,17 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
       });
       setFacts((prev) => [created, ...prev]);
       setNewFactContent("");
-      showToast("Biographical fact added.");
     } catch (e) {
-      showToast("Failed to add fact", "error");
+      alert("Failed to add fact");
     }
   };
 
-  const executeDeleteFact = async (id) => {
+  const handleDeleteFact = async (id) => {
     try {
       await api.deleteFact(id);
       setFacts((prev) => prev.filter((f) => (f.id || f._id) !== id));
-      showToast("Biographical fact deleted.");
     } catch (e) {
-      showToast("Failed to delete fact", "error");
-    } finally {
-      setDeleteTarget(null);
+      alert("Failed to delete fact");
     }
   };
 
@@ -186,9 +147,8 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
     try {
       const res = await api.uploadFile(formData);
       setNewMemPhotoUrl(res.url);
-      showToast("Photo uploaded successfully.");
     } catch (err) {
-      showToast("Upload failed: " + err.message, "error");
+      alert("Upload failed: " + err.message);
     } finally {
       setIsUploading(false);
     }
@@ -210,47 +170,30 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
       setNewMemCaption("");
       setNewMemPerson("");
       setNewMemPhotoUrl("");
-      showToast("Memory saved successfully.");
     } catch (err) {
-      showToast("Failed to add memory: " + err.message, "error");
+      alert("Failed to add memory: " + err.message);
     }
   };
 
-  const executeDeleteMemory = async (id) => {
+  const handleDeleteMemory = async (id) => {
     try {
       await api.deleteMemory(id);
       setMemories((prev) => prev.filter((m) => (m.id || m._id) !== id));
-      showToast("Memory deleted.");
     } catch (e) {
-      showToast("Failed to delete memory", "error");
-    } finally {
-      setDeleteTarget(null);
+      alert("Failed to delete memory");
     }
   };
 
-  const handleOpenResolveModal = (alertId) => {
-    setResolveTarget({ alertId, note: "" });
-  };
-
-  const handleConfirmResolveAlert = async () => {
-    if (!resolveTarget) return;
+  const handleResolveAlert = async (alertId) => {
     try {
-      const updated = await api.updateAlert(resolveTarget.alertId, {
+      const updated = await api.updateAlert(alertId, {
         read: true,
         dismissed: true,
-        resolution_note: resolveTarget.note.trim() || "Resolved by caregiver after review.",
         resolved_by: "Caregiver"
       });
-      setAlerts((prev) => prev.map((a) => (a.id === resolveTarget.alertId || a._id === resolveTarget.alertId ? updated : a)));
-      showToast("Alert resolved and recorded in audit log.");
-      setResolveTarget(null);
-
-      if (api.getAuditLogs) {
-        const updatedLogs = await api.getAuditLogs(patientId).catch(() => []);
-        setAuditLogs(updatedLogs);
-      }
+      setAlerts((prev) => prev.map((a) => (a.id === alertId ? updated : a)));
     } catch (e) {
-      showToast("Failed to resolve alert: " + e.message, "error");
+      alert("Failed to resolve alert");
     }
   };
 
@@ -262,10 +205,9 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
         radius_m: parseFloat(geoRadius)
       });
       setGeoSaved(true);
-      showToast("Geofence safe perimeter updated.");
       setTimeout(() => setGeoSaved(false), 3000);
     } catch (e) {
-      showToast("Failed to save geofence: " + e.message, "error");
+      alert("Failed to save geofence");
     }
   };
 
@@ -273,88 +215,64 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
     try {
       const breachAlert = await api.triggerGeofenceAlert({
         patient_id: patientId,
-        lat: parseFloat(geoLat) + 0.007,
-        lng: parseFloat(geoLng) + 0.007,
-        distance_m: parseFloat(geoRadius) + 180
+        lat: geoLat + 0.007,
+        lng: geoLng + 0.007,
+        distance_m: geoRadius + 180
       });
       setAlerts((prev) => [breachAlert, ...prev]);
       setActiveTab("alerts");
-      showToast("Simulated perimeter breach alert dispatched!", "error");
     } catch (e) {
-      showToast("Failed to simulate breach: " + e.message, "error");
+      alert("Failed to simulate breach");
     }
   };
 
-  // --- Skeleton Loading View ---
-  if (isLoading || !patient) {
-    return (
-      <div className="min-h-screen bg-caregiver-bg text-stone-900 p-6 space-y-6">
-        <div className="h-16 bg-white border border-stone-200 rounded-2xl animate-pulse"></div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-white border border-stone-200 rounded-2xl p-4"></div>
-          ))}
-        </div>
-        <div className="h-72 bg-white border border-stone-200 rounded-2xl animate-pulse"></div>
-        <div className="h-96 bg-white border border-stone-200 rounded-2xl animate-pulse"></div>
-      </div>
-    );
+  if (!patient) {
+    return <div className="p-8 text-center text-lg font-bold text-stone-600">Loading patient dossier...</div>;
   }
 
   // --- Calculations for Stat Cards ---
   const recentScores = gameSessions.slice(-10).map((s) => s.composite_score || 0);
   const avgRecentScore = recentScores.length ? Math.round(recentScores.reduce((a, b) => a + b, 0) / recentScores.length) : 0;
 
+  // Memory domain scores
   const memorySessions = gameSessions.filter((s) => s.game_type === "memory_match");
   const recentMemoryScore = memorySessions.length ? Math.round(memorySessions[memorySessions.length - 1].composite_score) : 0;
 
+  // Today routine completion
   const todayStr = getTodayISTDateString();
   const completedToday = reminders.filter((r) => (r.completed_dates || []).includes(todayStr)).length;
   const routineCompletionPct = reminders.length ? Math.round((completedToday / reminders.length) * 100) : 0;
 
   const activeAlertsCount = alerts.filter((a) => !a.dismissed).length;
 
+  // Chart data format (sample 25 points for smooth readability)
   const chartData = gameSessions.map((s, idx) => ({
-    week: `W${idx + 1}`,
     date: s.timestamp ? s.timestamp.slice(5, 10) : `W${idx + 1}`,
     score: Math.round(s.composite_score || 0),
-    memoryScore: s.game_type === "memory_match" ? Math.round(s.composite_score || 0) : null,
-    game: s.game_type === "memory_match" ? "Memory Match" : (s.game_type || "Routine")
+    game: s.game_type === "memory_match" ? "Memory Match" : s.game_type
   }));
 
   return (
-    <div className="min-h-screen bg-caregiver-bg text-stone-900 flex flex-col justify-between relative">
-      {/* Toast Notification */}
-      {toast && (
-        <div className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-xl text-sm font-bold flex items-center gap-2 border transition-all ${
-          toast.type === "error"
-            ? "bg-red-700 text-white border-red-900"
-            : "bg-emerald-700 text-white border-emerald-900"
-        }`}>
-          {toast.type === "error" ? <AlertOctagon className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
-          <span>{toast.message}</span>
-        </div>
-      )}
-
+    <div className="min-h-screen bg-caregiver-bg text-stone-900 flex flex-col justify-between">
       {/* Top Bar */}
-      <header className="bg-white border-b border-caregiver-border px-4 py-3 sticky top-0 z-20 shadow-xs">
+      <header className="bg-white border-b border-caregiver-border px-4 py-3 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="p-2 border border-stone-300 hover:bg-stone-100 rounded-xl text-stone-700 flex items-center gap-1 text-sm font-bold transition-colors"
+              className="p-2 border border-stone-300 hover:bg-stone-100 rounded-lg text-stone-700 flex items-center gap-1 text-sm font-bold"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Roster</span>
             </button>
             <span className="text-stone-300">|</span>
             <div>
-              <h1 className="text-xl font-black text-caregiver-primary flex items-center gap-2">
+              <h1 className="text-xl font-bold text-caregiver-primary flex items-center gap-2">
                 <span>{patient.name}</span>
-                <span className="text-xs bg-stone-100 text-stone-800 font-mono px-2 py-0.5 rounded-md border border-stone-200 font-bold">
-                  CODE: {patient.code}
+                <span className="text-xs bg-stone-100 text-stone-800 font-mono px-2 py-0.5 rounded border border-stone-200">
+                  ID: {patient.code}
                 </span>
-                <span className="text-xs bg-caregiver/10 text-caregiver px-2.5 py-0.5 rounded-full font-bold uppercase">
+                <span className="text-xs bg-caregiver/10 text-caregiver px-2 py-0.5 rounded font-bold uppercase">
                   {patient.dementia_stage} stage
                 </span>
               </h1>
@@ -364,7 +282,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
           <button
             data-testid="open-digest-btn"
             onClick={() => setIsDigestOpen(true)}
-            className="px-4 py-2 bg-caregiver hover:bg-caregiver-secondary text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-xs transition-all active:scale-95"
+            className="px-4 py-2 bg-caregiver hover:bg-caregiver-secondary text-white rounded-lg text-sm font-bold flex items-center gap-2"
           >
             <Mail className="w-4 h-4" />
             <span>Weekly Digest Email</span>
@@ -376,27 +294,27 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
       <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6 flex-1">
         {/* 4 Domain Stat Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm hover:shadow transition-shadow">
+          <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between text-stone-500 mb-1">
               <span className="text-xs font-bold uppercase tracking-wider">Cognitive Composite</span>
               <Brain className="w-5 h-5 text-caregiver" />
             </div>
             <div className="text-3xl font-black text-stone-900">{avgRecentScore} <span className="text-sm font-bold text-stone-500">/ 100</span></div>
-            <p className="text-xs text-stone-500 mt-1 font-medium">Weighted multi-game average</p>
+            <p className="text-xs text-stone-500 mt-1 font-medium">Rolling average across all games</p>
           </div>
 
-          <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm hover:shadow transition-shadow">
+          <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between text-stone-500 mb-1">
               <span className="text-xs font-bold uppercase tracking-wider">Memory Domain</span>
               <Activity className="w-5 h-5 text-amber-600" />
             </div>
             <div className="text-3xl font-black text-stone-900">{recentMemoryScore} <span className="text-sm font-bold text-stone-500">/ 100</span></div>
-            <span className="inline-block mt-1 text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md">
+            <span className="inline-block mt-1 text-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded">
               ▼ Decline Alert Active
             </span>
           </div>
 
-          <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm hover:shadow transition-shadow">
+          <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between text-stone-500 mb-1">
               <span className="text-xs font-bold uppercase tracking-wider">Today Routine</span>
               <Clock className="w-5 h-5 text-emerald-600" />
@@ -405,7 +323,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
             <p className="text-xs text-stone-500 mt-1 font-medium">{completedToday} of {reminders.length} reminders checked</p>
           </div>
 
-          <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm hover:shadow transition-shadow">
+          <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between text-stone-500 mb-1">
               <span className="text-xs font-bold uppercase tracking-wider">Active Alerts</span>
               <ShieldAlert className="w-5 h-5 text-red-600" />
@@ -415,134 +333,44 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
           </div>
         </div>
 
-        {/* 10-Week Longitudinal Cognitive Trend Line with Toggle */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        {/* 10-Week Longitudinal Cognitive Trend Line (Recharts) */}
+        <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-stone-900">10-Week Longitudinal Cognitive Trend</h2>
-                <span className="text-xs font-bold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300">
-                  Decline Threshold: 65 pts
-                </span>
-              </div>
-              <p className="text-xs text-stone-500 mt-0.5">
-                Composite scores across gaming sessions. Drops &gt; 15 pts trigger clinical notifications.
+              <h2 className="text-lg font-bold text-stone-900">10-Week Cognitive Score Trend</h2>
+              <p className="text-xs text-stone-500">
+                Visualizing longitudinal composite scores. Notice the sharp decline in weeks 9-10 in Memory Match.
               </p>
             </div>
-
-            {/* Accessible View Toggle: Chart vs Semantic Table */}
-            <div className="inline-flex rounded-xl p-1 bg-stone-100 border border-stone-200 self-start sm:self-auto">
-              <button
-                onClick={() => setTrendViewMode("chart")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  trendViewMode === "chart"
-                    ? "bg-white text-stone-900 shadow-xs"
-                    : "text-stone-600 hover:text-stone-900"
-                }`}
-                aria-pressed={trendViewMode === "chart"}
-              >
-                <BarChart2 className="w-3.5 h-3.5" />
-                <span>Chart View</span>
-              </button>
-              <button
-                onClick={() => setTrendViewMode("table")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  trendViewMode === "table"
-                    ? "bg-white text-stone-900 shadow-xs"
-                    : "text-stone-600 hover:text-stone-900"
-                }`}
-                aria-pressed={trendViewMode === "table"}
-              >
-                <Table className="w-3.5 h-3.5" />
-                <span>Table View</span>
-              </button>
-            </div>
+            <span className="text-xs font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded">
+              Drop &gt; 15 pts triggers automatic alert
+            </span>
           </div>
 
-          {trendViewMode === "chart" ? (
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 30, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="week" stroke="#64748b" fontSize={11} />
-                  <YAxis domain={[0, 100]} stroke="#64748b" fontSize={11} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '2px solid #e2e8f0', fontSize: '12px', fontWeight: 'bold' }}
-                  />
-                  <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "12px", fontWeight: "bold" }} />
-                  <ReferenceLine
-                    y={65}
-                    stroke="#dc2626"
-                    strokeDasharray="4 4"
-                    strokeWidth={2}
-                    label={{ value: "Decline Threshold (65)", fill: "#dc2626", fontSize: 11, position: "insideTopRight" }}
-                  />
-                  <Line
-                    name="Composite Score"
-                    type="monotone"
-                    dataKey="score"
-                    stroke="#2D4A3E"
-                    strokeWidth={3}
-                    dot={{ r: 3, fill: "#2D4A3E" }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border border-stone-200 rounded-xl overflow-hidden">
-                <thead className="bg-stone-100 text-stone-700 uppercase font-black text-xs">
-                  <tr>
-                    <th className="p-3">Week</th>
-                    <th className="p-3">Date</th>
-                    <th className="p-3">Game Modality</th>
-                    <th className="p-3">Score / 100</th>
-                    <th className="p-3">Clinical Assessment</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-200">
-                  {chartData.map((row, idx) => (
-                    <tr key={idx} className={row.score < 65 ? "bg-red-50/50" : "hover:bg-stone-50"}>
-                      <td className="p-3 font-bold text-stone-900">{row.week}</td>
-                      <td className="p-3 text-stone-600 font-mono text-xs">{row.date}</td>
-                      <td className="p-3 font-medium text-stone-800">{row.game}</td>
-                      <td className="p-3 font-black text-stone-900">{row.score}</td>
-                      <td className="p-3">
-                        {row.score < 65 ? (
-                          <span className="text-xs font-black text-red-700 bg-red-100 px-2 py-0.5 rounded-full border border-red-200">
-                            Below Threshold (&lt;65)
-                          </span>
-                        ) : (
-                          <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
-                            Normal Stability
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Clinical Metrics Explanation */}
-          <div className="mt-4 pt-3 border-t border-stone-100 flex items-start gap-2.5 text-xs text-stone-600 bg-stone-50 p-3 rounded-xl">
-            <Info className="w-4 h-4 text-caregiver shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <span className="font-bold text-stone-800 block">Metric Clinical Framework:</span>
-              <p>
-                <strong>Cognitive Composite:</strong> Aggregated multi-modal index (0–100) scoring speed, accuracy, and sequencing across sessions.
-              </p>
-              <p>
-                <strong>Decline Threshold (65):</strong> Clinical benchmark based on baseline MOCA/GDS scaling; sustained drops below 65 trigger caregiver digest alerts and family outreach recommendations.
-              </p>
-            </div>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} />
+                <YAxis domain={[0, 100]} stroke="#94a3b8" fontSize={11} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="score"
+                  stroke="#2D4A3E"
+                  strokeWidth={2.5}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-stone-200 gap-2 overflow-x-auto text-sm font-bold scrollbar-none">
+        <div className="flex border-b border-stone-200 gap-2 overflow-x-auto text-sm font-bold">
           {[
             { id: "overview", label: "Overview & Vitals" },
             { id: "reminders", label: `Reminders (${reminders.length})` },
@@ -550,8 +378,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
             { id: "facts", label: `Facts (${facts.length})` },
             { id: "alerts", label: `Alerts (${alerts.length})` },
             { id: "geofence", label: "Geofence & Perimeter" },
-            { id: "profile", label: "Intake Survey & PIN Reset" },
-            { id: "audit", label: `Audit Log (${auditLogs.length})` }
+            { id: "profile", label: "Intake Survey & PIN Reset" }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -570,10 +397,10 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
         {/* Tab 1: Overview */}
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm">
+            <div className="bg-white p-5 border border-stone-200 rounded-xl">
               <h3 className="text-base font-bold text-stone-900 mb-3">Family & Emergency Contacts</h3>
               <div className="space-y-3 text-sm">
-                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
+                <div className="p-3 bg-stone-50 rounded-lg">
                   <span className="text-xs text-stone-500 font-bold block">Primary Emergency Contact</span>
                   <p className="font-bold text-stone-900 text-base">
                     {patient.survey?.safety?.emergency_contact_name || "Bikash Baruah (Son)"}
@@ -583,7 +410,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                   </p>
                 </div>
 
-                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
+                <div className="p-3 bg-stone-50 rounded-lg">
                   <span className="text-xs text-stone-500 font-bold block">Key Family Circle</span>
                   <div className="mt-1 space-y-1">
                     {(patient.survey?.family_context || []).map((m, idx) => (
@@ -596,22 +423,22 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
               </div>
             </div>
 
-            <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm">
+            <div className="bg-white p-5 border border-stone-200 rounded-xl">
               <h3 className="text-base font-bold text-stone-900 mb-3">Life Interests & Grounding Cues</h3>
               <div className="space-y-3 text-sm">
-                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
+                <div className="p-3 bg-stone-50 rounded-lg">
                   <span className="text-xs text-stone-500 font-bold block">Former Occupation</span>
                   <p className="font-bold text-stone-900">
                     {patient.survey?.interests_history?.former_occupation || "Teacher"}
                   </p>
                 </div>
-                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
+                <div className="p-3 bg-stone-50 rounded-lg">
                   <span className="text-xs text-stone-500 font-bold block">Favorite Regional Foods</span>
                   <p className="font-bold text-stone-900">
                     {(patient.survey?.interests_history?.favorite_foods || []).join(", ") || "Assam tea"}
                   </p>
                 </div>
-                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
+                <div className="p-3 bg-stone-50 rounded-lg">
                   <span className="text-xs text-stone-500 font-bold block">Favorite Places</span>
                   <p className="font-bold text-stone-900">
                     {(patient.survey?.interests_history?.favorite_places || []).join(", ") || "Jorhat"}
@@ -624,10 +451,11 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
 
         {/* Tab 2: Reminders CRUD */}
         {activeTab === "reminders" && (
-          <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm space-y-6">
+          <div className="bg-white p-5 border border-stone-200 rounded-xl space-y-6">
             <h3 className="text-lg font-bold text-stone-900">Schedule & Daily Routine Management</h3>
 
-            <form onSubmit={handleCreateReminder} className="p-4 bg-stone-50 border border-stone-200 rounded-xl flex flex-wrap gap-3 items-end">
+            {/* Create Reminder Form */}
+            <form onSubmit={handleCreateReminder} className="p-4 bg-stone-50 border border-stone-200 rounded-lg flex flex-wrap gap-3 items-end">
               <div className="flex-1 min-w-[200px]">
                 <label className="block text-xs font-bold text-stone-600 mb-1">Reminder Title</label>
                 <input
@@ -636,7 +464,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                   value={newRemTitle}
                   onChange={(e) => setNewRemTitle(e.target.value)}
                   placeholder="e.g. Afternoon BP Tablet"
-                  className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                  className="w-full p-2 border border-stone-300 rounded text-sm"
                 />
               </div>
               <div className="w-32">
@@ -646,7 +474,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                   required
                   value={newRemTime}
                   onChange={(e) => setNewRemTime(e.target.value)}
-                  className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                  className="w-full p-2 border border-stone-300 rounded text-sm"
                 />
               </div>
               <div className="w-36">
@@ -654,7 +482,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                 <select
                   value={newRemCategory}
                   onChange={(e) => setNewRemCategory(e.target.value)}
-                  className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                  className="w-full p-2 border border-stone-300 rounded text-sm bg-white"
                 >
                   <option value="medication">Medication</option>
                   <option value="meal">Meal</option>
@@ -665,28 +493,29 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
               </div>
               <button
                 type="submit"
-                className="px-4 py-2 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded-lg flex items-center gap-1.5 shadow-xs"
+                className="px-4 py-2 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Reminder</span>
               </button>
             </form>
 
+            {/* List */}
             <div className="divide-y divide-stone-200">
               {reminders.map((rem) => (
                 <div key={rem.id || rem._id} className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm font-bold bg-stone-100 px-2.5 py-1 rounded-md text-stone-800">
+                    <span className="font-mono text-sm font-bold bg-stone-100 px-2.5 py-1 rounded text-stone-800">
                       {rem.time_str}
                     </span>
                     <span className="text-sm font-bold text-stone-900">{rem.title}</span>
-                    <span className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded capitalize font-medium">
+                    <span className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded capitalize">
                       {rem.category}
                     </span>
                   </div>
                   <button
-                    onClick={() => setDeleteTarget({ type: "reminder", id: rem.id || rem._id, title: rem.title })}
-                    className="p-1.5 text-stone-400 hover:text-red-700 rounded-lg hover:bg-red-50"
+                    onClick={() => handleDeleteReminder(rem.id || rem._id)}
+                    className="p-1.5 text-stone-400 hover:text-red-700 rounded"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -698,10 +527,11 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
 
         {/* Tab 3: Memories CRUD */}
         {activeTab === "memories" && (
-          <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm space-y-6">
+          <div className="bg-white p-5 border border-stone-200 rounded-xl space-y-6">
             <h3 className="text-lg font-bold text-stone-900">Family Memories & Photographic Aids</h3>
 
-            <form onSubmit={handleCreateMemory} className="p-4 bg-stone-50 border border-stone-200 rounded-xl space-y-3">
+            {/* Add Memory Form */}
+            <form onSubmit={handleCreateMemory} className="p-4 bg-stone-50 border border-stone-200 rounded-lg space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-stone-600 mb-1">Memory Title</label>
@@ -711,7 +541,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                     value={newMemTitle}
                     onChange={(e) => setNewMemTitle(e.target.value)}
                     placeholder="e.g. Majuli Mask Making Trip"
-                    className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                    className="w-full p-2 border border-stone-300 rounded text-sm"
                   />
                 </div>
                 <div>
@@ -722,7 +552,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                     value={newMemPerson}
                     onChange={(e) => setNewMemPerson(e.target.value)}
                     placeholder="e.g. Granddaughter Priyam"
-                    className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                    className="w-full p-2 border border-stone-300 rounded text-sm"
                   />
                 </div>
               </div>
@@ -735,7 +565,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                   value={newMemCaption}
                   onChange={(e) => setNewMemCaption(e.target.value)}
                   placeholder="Describe the memory in warm, positive words..."
-                  className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                  className="w-full p-2 border border-stone-300 rounded text-sm"
                 />
               </div>
 
@@ -748,13 +578,13 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                     value={newMemPhotoUrl}
                     onChange={(e) => setNewMemPhotoUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                    className="w-full p-2 border border-stone-300 rounded text-sm"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-stone-600 mb-1">Upload Photo</label>
-                  <label className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-lg font-bold text-sm cursor-pointer inline-flex items-center gap-1.5">
+                  <label className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded font-bold text-sm cursor-pointer inline-flex items-center gap-1.5">
                     <Upload className="w-4 h-4" />
                     <span>{isUploading ? "Uploading..." : "Choose File"}</span>
                     <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
@@ -768,13 +598,13 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                     value={newMemYear}
                     onChange={(e) => setNewMemYear(e.target.value)}
                     placeholder="2018"
-                    className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                    className="w-full p-2 border border-stone-300 rounded text-sm"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="mt-5 px-5 py-2 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded-lg flex items-center gap-1.5 shadow-xs"
+                  className="mt-5 px-5 py-2 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Save Memory</span>
@@ -782,12 +612,13 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
               </div>
             </form>
 
+            {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {memories.map((mem) => (
-                <div key={mem.id || mem._id} className="border border-stone-200 rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col justify-between">
+                <div key={mem.id || mem._id} className="border border-stone-300 rounded-lg overflow-hidden bg-white shadow-sm flex flex-col justify-between">
                   <div>
                     <img src={mem.photo_url} alt={mem.title} className="w-full h-40 object-cover" />
-                    <div className="p-3.5">
+                    <div className="p-3">
                       <div className="flex items-center justify-between text-xs text-stone-500 font-bold mb-1">
                         <span>{mem.person_event}</span>
                         <span>{mem.approx_year_or_date}</span>
@@ -796,10 +627,10 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                       <p className="text-xs text-stone-600 line-clamp-3">{mem.caption}</p>
                     </div>
                   </div>
-                  <div className="p-2.5 bg-stone-50 border-t border-stone-200 flex justify-end">
+                  <div className="p-2 bg-stone-50 border-t border-stone-200 flex justify-end">
                     <button
-                      onClick={() => setDeleteTarget({ type: "memory", id: mem.id || mem._id, title: mem.title })}
-                      className="p-1.5 text-stone-400 hover:text-red-700 rounded-lg text-xs flex items-center gap-1"
+                      onClick={() => handleDeleteMemory(mem.id || mem._id)}
+                      className="p-1.5 text-stone-400 hover:text-red-700 rounded text-xs flex items-center gap-1"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>Delete</span>
@@ -813,11 +644,12 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
 
         {/* Tab 4: Facts CRUD */}
         {activeTab === "facts" && (
-          <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm space-y-6">
+          <div className="bg-white p-5 border border-stone-200 rounded-xl space-y-6">
             <h3 className="text-lg font-bold text-stone-900">Standalone Biographical Factoids</h3>
             <p className="text-xs text-stone-500">Short factual anchors about the patient's identity, distinct from memories.</p>
 
-            <form onSubmit={handleCreateFact} className="p-4 bg-stone-50 border border-stone-200 rounded-xl flex flex-wrap gap-3 items-end">
+            {/* Create Fact */}
+            <form onSubmit={handleCreateFact} className="p-4 bg-stone-50 border border-stone-200 rounded-lg flex flex-wrap gap-3 items-end">
               <div className="flex-1 min-w-[240px]">
                 <label className="block text-xs font-bold text-stone-600 mb-1">Factoid Content</label>
                 <input
@@ -826,7 +658,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                   value={newFactContent}
                   onChange={(e) => setNewFactContent(e.target.value)}
                   placeholder="e.g. Worked as Mathematics Headmaster for 32 years."
-                  className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                  className="w-full p-2 border border-stone-300 rounded text-sm"
                 />
               </div>
               <div className="w-36">
@@ -834,7 +666,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                 <select
                   value={newFactCategory}
                   onChange={(e) => setNewFactCategory(e.target.value)}
-                  className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"
+                  className="w-full p-2 border border-stone-300 rounded text-sm bg-white"
                 >
                   <option value="career">Career</option>
                   <option value="hobby">Hobby</option>
@@ -845,7 +677,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
               </div>
               <button
                 type="submit"
-                className="px-4 py-2 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded-lg flex items-center gap-1.5 shadow-xs"
+                className="px-4 py-2 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Fact</span>
@@ -854,7 +686,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
 
             <div className="space-y-3">
               {facts.map((fact) => (
-                <div key={fact.id || fact._id} className="p-3.5 bg-stone-50 border border-stone-200 rounded-xl flex items-center justify-between gap-3">
+                <div key={fact.id || fact._id} className="p-3.5 bg-stone-50 border border-stone-200 rounded-lg flex items-center justify-between gap-3">
                   <div>
                     <span className="text-xs uppercase font-bold text-caregiver bg-stone-200 px-2 py-0.5 rounded mr-2">
                       {fact.category}
@@ -862,8 +694,8 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                     <span className="text-sm font-semibold text-stone-900">{fact.content}</span>
                   </div>
                   <button
-                    onClick={() => setDeleteTarget({ type: "fact", id: fact.id || fact._id, title: fact.content })}
-                    className="p-1.5 text-stone-400 hover:text-red-700 rounded-lg"
+                    onClick={() => handleDeleteFact(fact.id || fact._id)}
+                    className="p-1.5 text-stone-400 hover:text-red-700"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -875,13 +707,13 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
 
         {/* Tab 5: Alerts Panel */}
         {activeTab === "alerts" && (
-          <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm space-y-4">
+          <div className="bg-white p-5 border border-stone-200 rounded-xl space-y-4">
             <div className="flex items-center justify-between border-b border-stone-200 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-stone-900">Real-Time Alerts & Safety Incident Log</h3>
                 <p className="text-xs text-stone-500">Decline detection (&gt;15pts drop), Emergency SOS, and Geofence alerts</p>
               </div>
-              <span className="text-xs font-bold text-stone-600 bg-stone-100 px-3 py-1 rounded-lg">
+              <span className="text-xs font-bold text-stone-600 bg-stone-100 px-3 py-1 rounded">
                 {alerts.filter((a) => !a.dismissed).length} Unresolved
               </span>
             </div>
@@ -895,14 +727,14 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                 return (
                   <div
                     key={alert.id || alert._id}
-                    className={`p-4 rounded-xl border-2 flex items-start justify-between gap-4 transition-all ${
+                    className={`p-4 rounded-lg border-2 flex items-start justify-between gap-4 ${
                       alert.dismissed
-                        ? "bg-stone-50 border-stone-200 opacity-70"
+                        ? "bg-stone-50 border-stone-200 opacity-60"
                         : isSOS
-                        ? "bg-red-50 border-red-500 shadow-sm"
+                        ? "bg-red-50 border-red-500"
                         : isDecline
-                        ? "bg-amber-50 border-amber-500 shadow-sm"
-                        : "bg-blue-50 border-blue-500 shadow-sm"
+                        ? "bg-amber-50 border-amber-500"
+                        : "bg-blue-50 border-blue-500"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -912,7 +744,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                         {isGeofence && <MapPin className="w-6 h-6 text-blue-700" />}
                       </div>
                       <div>
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1">
                           <span className={`text-xs font-black uppercase px-2 py-0.5 rounded text-white ${
                             isSOS ? "bg-red-700" : isDecline ? "bg-amber-700" : "bg-blue-700"
                           }`}>
@@ -922,7 +754,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                             {formatISTDateTime(alert.timestamp)}
                           </span>
                           {alert.dismissed && (
-                            <span className="text-xs text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded-md border border-emerald-300">
+                            <span className="text-xs text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded">
                               Resolved by {alert.resolved_by || "Caregiver"}
                             </span>
                           )}
@@ -938,15 +770,8 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                           </p>
                         )}
 
-                        {alert.details?.resolution_note && (
-                          <div className="mt-2 bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-xs text-emerald-950 font-medium">
-                            <span className="font-bold">Resolution Note: </span>
-                            <span>{alert.details.resolution_note}</span>
-                          </div>
-                        )}
-
                         {alert.details?.simulated_sms && (
-                          <p className="text-xs text-stone-600 mt-1 font-mono bg-white/70 p-1.5 rounded-lg border border-stone-200">
+                          <p className="text-xs text-stone-600 mt-1 font-mono bg-white/70 p-1.5 rounded border border-stone-200">
                             Simulated SMS dispatched to {alert.details.simulated_sms_sent_to || "emergency contact"}: "{alert.details.simulated_sms}"
                           </p>
                         )}
@@ -955,11 +780,11 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
 
                     {!alert.dismissed && (
                       <button
-                        onClick={() => handleOpenResolveModal(alert.id || alert._id)}
-                        className="px-3 py-1.5 bg-white hover:bg-stone-100 active:scale-95 text-stone-800 text-xs font-bold rounded-lg border border-stone-300 flex items-center gap-1 flex-shrink-0 shadow-xs transition-all"
+                        onClick={() => handleResolveAlert(alert.id || alert._id)}
+                        className="px-3 py-1.5 bg-white hover:bg-stone-100 text-stone-800 text-xs font-bold rounded border border-stone-300 flex items-center gap-1 flex-shrink-0"
                       >
                         <Check className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>Resolve Alert</span>
+                        <span>Mark Resolved</span>
                       </button>
                     )}
                   </div>
@@ -971,7 +796,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
 
         {/* Tab 6: Geofence */}
         {activeTab === "geofence" && (
-          <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm space-y-6">
+          <div className="bg-white p-5 border border-stone-200 rounded-xl space-y-6">
             <div className="flex items-center justify-between border-b border-stone-200 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-stone-900">Safe Boundary & Wandering Perimeter</h3>
@@ -980,7 +805,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
 
               <button
                 onClick={handleSimulateGeofenceBreach}
-                className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs active:scale-95 transition-all"
+                className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-bold flex items-center gap-1.5"
               >
                 <AlertTriangle className="w-4 h-4" />
                 <span>Simulate Perimeter Breach</span>
@@ -988,7 +813,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
             </div>
 
             {geoSaved && (
-              <div className="p-3 bg-emerald-50 text-emerald-900 text-sm font-bold rounded-xl border border-emerald-300">
+              <div className="p-3 bg-emerald-50 text-emerald-900 text-sm font-bold rounded border border-emerald-300">
                 Geofence coordinates and safe radius saved successfully.
               </div>
             )}
@@ -1001,7 +826,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                   step="0.0001"
                   value={geoLat}
                   onChange={(e) => setGeoLat(e.target.value)}
-                  className="w-full p-2 border border-stone-300 rounded-lg font-mono text-sm bg-stone-50"
+                  className="w-full p-2 border border-stone-300 rounded font-mono text-sm"
                 />
               </div>
 
@@ -1012,7 +837,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                   step="0.0001"
                   value={geoLng}
                   onChange={(e) => setGeoLng(e.target.value)}
-                  className="w-full p-2 border border-stone-300 rounded-lg font-mono text-sm bg-stone-50"
+                  className="w-full p-2 border border-stone-300 rounded font-mono text-sm"
                 />
               </div>
 
@@ -1023,38 +848,29 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                   step="50"
                   value={geoRadius}
                   onChange={(e) => setGeoRadius(e.target.value)}
-                  className="w-full p-2 border border-stone-300 rounded-lg font-mono text-sm bg-stone-50"
+                  className="w-full p-2 border border-stone-300 rounded font-mono text-sm"
                 />
               </div>
             </div>
 
             {/* Interactive Map Visual Simulator */}
-            <div className="h-72 bg-stone-100 border-2 border-stone-300 rounded-2xl relative flex items-center justify-center overflow-hidden shadow-inner">
-              <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#2D4A3E_1px,transparent_1px)] [background-size:16px_16px]"></div>
-
+            <div className="h-64 bg-stone-100 border-2 border-stone-300 rounded-xl relative flex items-center justify-center overflow-hidden">
               <div
-                className="rounded-full bg-emerald-500/20 border-3 border-emerald-600 border-dashed flex items-center justify-center transition-all animate-pulse shadow-xl"
-                style={{ width: `${Math.min(320, geoRadius / 1.8)}px`, height: `${Math.min(320, geoRadius / 1.8)}px` }}
+                className="rounded-full bg-caregiver/20 border-2 border-caregiver border-dashed flex items-center justify-center transition-all"
+                style={{ width: `${Math.min(300, geoRadius / 2)}px`, height: `${Math.min(300, geoRadius / 2)}px` }}
               >
                 <div className="text-center">
-                  <MapPin className="w-10 h-10 text-red-700 mx-auto drop-shadow" />
-                  <span className="text-xs font-black text-stone-900 block bg-white/95 px-3 py-1 rounded-full shadow border border-stone-200">
+                  <MapPin className="w-8 h-8 text-red-700 mx-auto animate-bounce" />
+                  <span className="text-xs font-bold text-caregiver block bg-white px-2 py-0.5 rounded shadow-sm">
                     Home Base ({geoRadius}m radius)
                   </span>
-                  <span className="text-[10px] text-stone-500 font-mono block mt-0.5">
-                    {geoLat.toFixed(4)}° N, {geoLng.toFixed(4)}° E
-                  </span>
                 </div>
-              </div>
-
-              <div className="absolute bottom-3 left-3 bg-white/90 px-3 py-1.5 rounded-lg border border-stone-200 text-xs font-bold text-stone-700">
-                Safe Zone: Active • GPS Monitoring Live
               </div>
             </div>
 
             <button
               onClick={handleSaveGeofence}
-              className="px-6 py-2.5 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded-xl shadow-xs transition-all active:scale-95"
+              className="px-6 py-2.5 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded-lg"
             >
               Save Geofence Configuration
             </button>
@@ -1065,17 +881,17 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
         {activeTab === "profile" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* PIN Reset Card */}
-            <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm space-y-4">
+            <div className="bg-white p-5 border border-stone-200 rounded-xl space-y-4">
               <div className="flex items-center gap-2 text-caregiver border-b border-stone-200 pb-2">
                 <KeyRound className="w-5 h-5" />
                 <h3 className="font-bold text-base text-stone-900">Reset Patient Security PIN</h3>
               </div>
               <p className="text-xs text-stone-500">
-                Patients cannot self-reset forgotten PINs for clinical protection. Caregivers can set a new 4 or 6-digit PIN here, which immediately clears any lockout and records in audit history.
+                Patients cannot self-reset forgotten PINs for clinical protection. Caregivers can set a new 4 or 6-digit PIN here, which immediately clears any lockout.
               </p>
 
               {pinSuccess && (
-                <div className="p-3 bg-emerald-50 text-emerald-900 text-xs font-bold rounded-xl border border-emerald-300">
+                <div className="p-3 bg-emerald-50 text-emerald-900 text-xs font-bold rounded border border-emerald-300">
                   {pinSuccess}
                 </div>
               )}
@@ -1090,12 +906,12 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
                     value={newPin}
                     onChange={(e) => setNewPin(e.target.value)}
                     placeholder="e.g. 1234"
-                    className="w-full p-2 border border-stone-300 rounded-lg font-mono font-bold text-base bg-stone-50"
+                    className="w-full p-2 border border-stone-300 rounded font-mono font-bold text-base"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded-xl shadow-xs active:scale-95 transition-all"
+                  className="px-5 py-2 bg-caregiver hover:bg-caregiver-secondary text-white font-bold text-sm rounded-lg"
                 >
                   Apply New PIN & Unlock
                 </button>
@@ -1103,28 +919,25 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
             </div>
 
             {/* Patient Credentials Card */}
-            <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm space-y-3">
+            <div className="bg-white p-5 border border-stone-200 rounded-xl space-y-3">
               <div className="flex items-center gap-2 text-stone-700 border-b border-stone-200 pb-2">
                 <User className="w-5 h-5" />
                 <h3 className="font-bold text-base text-stone-900">Patient Credentials Summary</h3>
               </div>
-              <div className="p-3.5 bg-stone-50 rounded-xl space-y-2.5 text-sm border border-stone-200">
-                <div className="flex justify-between items-center">
-                  <span className="text-stone-500 font-medium">Patient Code:</span>
-                  <span className="font-mono font-bold text-stone-900 bg-stone-200 px-2 py-0.5 rounded-md">{patient.code}</span>
+              <div className="p-3 bg-stone-50 rounded-lg space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-stone-500 font-medium">Unique Patient Code:</span>
+                  <span className="font-mono font-bold text-stone-900 bg-stone-200 px-2 py-0.5 rounded">{patient.code}</span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between">
                   <span className="text-stone-500 font-medium">Consent Attestation:</span>
-                  <span className="text-emerald-800 font-bold flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    Attested by Caregiver
-                  </span>
+                  <span className="text-emerald-800 font-bold">Attested by Caregiver</span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between">
                   <span className="text-stone-500 font-medium">Attestation Timestamp:</span>
-                  <span className="text-stone-700 font-medium">{formatISTDateTime(patient.consent_timestamp)}</span>
+                  <span className="text-stone-700">{formatISTDateTime(patient.consent_timestamp)}</span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between">
                   <span className="text-stone-500 font-medium">Lockout Status:</span>
                   <span className={patient.lockout_until ? "text-red-700 font-bold" : "text-emerald-700 font-bold"}>
                     {patient.lockout_until ? "Locked (15 min)" : "Active / Unlocked"}
@@ -1134,149 +947,7 @@ export default function CaregiverPatientDetail({ patientId, onBack }) {
             </div>
           </div>
         )}
-
-        {/* Tab 8: Audit Log */}
-        {activeTab === "audit" && (
-          <div className="bg-white p-5 border border-stone-200 rounded-2xl shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-stone-100 rounded-lg">
-                  <History className="w-5 h-5 text-caregiver" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-stone-900">Clinical Audit & Access Trail</h3>
-                  <p className="text-xs text-stone-500">Tamper-evident log of PIN resets, alert resolutions, and emergency events</p>
-                </div>
-              </div>
-              <span className="text-xs font-mono font-bold bg-stone-100 px-3 py-1 rounded-lg">
-                {auditLogs.length} Events Recorded
-              </span>
-            </div>
-
-            {auditLogs.length === 0 ? (
-              <div className="text-center py-12 text-stone-500 text-sm font-medium">
-                No audit events recorded yet for this patient profile.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm border border-stone-200 rounded-xl overflow-hidden">
-                  <thead className="bg-stone-100 text-stone-700 uppercase font-black text-xs">
-                    <tr>
-                      <th className="p-3">Timestamp (IST)</th>
-                      <th className="p-3">Action Type</th>
-                      <th className="p-3">Actor</th>
-                      <th className="p-3">Details / Resolution Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-200">
-                    {auditLogs.map((log, idx) => (
-                      <tr key={idx} className="hover:bg-stone-50">
-                        <td className="p-3 font-mono text-xs text-stone-600">
-                          {formatISTDateTime(log.timestamp)}
-                        </td>
-                        <td className="p-3">
-                          <span className={`text-xs font-black px-2 py-0.5 rounded-full uppercase border ${
-                            log.action === "PIN_RESET"
-                              ? "bg-purple-50 text-purple-800 border-purple-200"
-                              : log.action === "ALERT_RESOLVED"
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                              : log.action === "SOS_TRIGGERED"
-                              ? "bg-rose-50 text-rose-800 border-rose-200"
-                              : "bg-stone-100 text-stone-800 border-stone-300"
-                          }`}>
-                            {log.action}
-                          </span>
-                        </td>
-                        <td className="p-3 font-medium text-stone-800">
-                          {log.actor || "Caregiver"}
-                        </td>
-                        <td className="p-3 text-stone-700 text-xs font-mono">
-                          {typeof log.details === "object" ? JSON.stringify(log.details) : (log.details || "—")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
       </main>
-
-      {/* Delete Confirmation Modal */}
-      {deleteTarget && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white border-2 border-stone-300 rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="flex items-center gap-3 text-red-700 mb-3">
-              <AlertTriangle className="w-7 h-7" />
-              <h3 className="text-xl font-black text-stone-900">Confirm Deletion</h3>
-            </div>
-            <p className="text-sm text-stone-700 mb-6 leading-relaxed">
-              Are you sure you want to permanently delete this {deleteTarget.type}:
-              <strong className="block text-stone-900 mt-1">"{deleteTarget.title}"</strong>
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 border border-stone-300 rounded-xl text-sm font-bold text-stone-700 hover:bg-stone-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (deleteTarget.type === "reminder") executeDeleteReminder(deleteTarget.id);
-                  if (deleteTarget.type === "memory") executeDeleteMemory(deleteTarget.id);
-                  if (deleteTarget.type === "fact") executeDeleteFact(deleteTarget.id);
-                }}
-                className="px-5 py-2 bg-red-700 hover:bg-red-800 text-white rounded-xl text-sm font-bold shadow-xs active:scale-95"
-              >
-                Delete Permanently
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Alert Resolution Modal with Clinical Note */}
-      {resolveTarget && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white border-2 border-stone-300 rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5 text-emerald-700">
-                <CheckCircle className="w-6 h-6" />
-                <h3 className="text-xl font-black text-stone-900">Resolve Clinical Alert</h3>
-              </div>
-              <button onClick={() => setResolveTarget(null)} className="p-1 text-stone-400 hover:text-stone-700">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-xs text-stone-600 mb-3">
-              Document your clinical or supervisory action before clearing this alert from the active surveillance queue:
-            </p>
-            <textarea
-              rows={3}
-              value={resolveTarget.note}
-              onChange={(e) => setResolveTarget((prev) => ({ ...prev, note: e.target.value }))}
-              placeholder="e.g. Visited elder, verified vitals and administered medication as scheduled."
-              className="w-full p-3 border border-stone-300 rounded-xl text-sm mb-4 focus:border-caregiver focus:outline-none"
-            />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setResolveTarget(null)}
-                className="px-4 py-2 border border-stone-300 rounded-xl text-sm font-bold text-stone-700 hover:bg-stone-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmResolveAlert}
-                className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow-xs active:scale-95"
-              >
-                Mark Resolved & Log Note
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Weekly Digest Preview Modal */}
       <WeeklyDigestModal

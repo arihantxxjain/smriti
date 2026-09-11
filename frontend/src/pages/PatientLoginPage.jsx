@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Lock, UserCheck, Delete, ArrowRight, ShieldAlert, Sparkles, KeyRound } from "lucide-react";
+import { Lock, UserCheck, Delete, ArrowRight, ShieldAlert, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
-import { soundEffects } from "../utils/soundEffects";
 
 export default function PatientLoginPage({ onSwitchToCaregiver }) {
   const { loginPatient } = useAuth();
@@ -26,7 +25,6 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
 
   const handleKeypadPress = (val) => {
     if (lockoutMinutes > 0) return;
-    soundEffects.playTap();
     if (val === "BACKSPACE") {
       setPin((prev) => prev.slice(0, -1));
     } else if (val === "CLEAR") {
@@ -42,17 +40,19 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
     if (e) e.preventDefault();
     if (!code.trim() || !pin.trim() || isLoading || lockoutMinutes > 0) return;
 
-    soundEffects.playTap();
+    if (code.trim().length < 6 || code.trim().length > 8) {
+      setError("Please enter a 6–8 character patient code.");
+      return;
+    }
+
     setError("");
     setIsLoading(true);
 
     try {
       await loginPatient({ code: code.trim(), pin: pin.trim() });
-      soundEffects.playSuccess();
     } catch (err) {
       const errMsg = err.message || "Login failed";
       setError(errMsg);
-      soundEffects.playMismatch();
 
       // Check if lockout was triggered
       if (errMsg.includes("locked") || errMsg.includes("15 minutes") || errMsg.includes("lockout")) {
@@ -64,36 +64,16 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
   };
 
   const handleQuickDemoFill = () => {
-    soundEffects.playTap();
     setCode("DEMO01");
     setPin("1234");
     setError("");
-    setLockoutMinutes(0);
-  };
-
-  const handleOneClickDemoLogin = async () => {
-    soundEffects.playTap();
-    setCode("DEMO01");
-    setPin("1234");
-    setError("");
-    setLockoutMinutes(0);
-    setIsLoading(true);
-    try {
-      await loginPatient({ code: "DEMO01", pin: "1234" });
-      soundEffects.playSuccess();
-    } catch (err) {
-      setError(err.message || "Demo login failed");
-      soundEffects.playMismatch();
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
     <div className="min-h-screen bg-patient-bg flex flex-col justify-between p-4 sm:p-6 text-stone-900">
       {/* Top Banner */}
       <div className="max-w-md w-full mx-auto text-center pt-4">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-100 border border-red-300 rounded-full text-red-900 font-bold text-sm mb-3 shadow-xs">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-100 border border-red-300 rounded-full text-red-900 font-bold text-sm mb-3">
           <Sparkles className="w-4 h-4 text-red-700" />
           <span>MDoNER • SIH26003 Dementia Care</span>
         </div>
@@ -106,18 +86,13 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
       </div>
 
       {/* Main Login Card */}
-      <div className="max-w-md w-full mx-auto bg-white border-4 border-red-700 rounded-2xl p-6 ner-gamusa-border-top my-6 shadow-xl">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="p-2.5 bg-red-100 rounded-xl">
-            <KeyRound className="w-6 h-6 text-red-700" />
-          </div>
-          <h2 className="text-2xl font-black text-stone-900 text-center">
-            {t("login_title")}
-          </h2>
-        </div>
+      <div className="max-w-md w-full mx-auto bg-white border-4 border-red-700 rounded-xl p-6 ner-gamusa-border-top my-6">
+        <h2 className="text-2xl font-black text-stone-900 mb-4 text-center">
+          {t("login_title")}
+        </h2>
 
         {error && (
-          <div data-testid="login-error-alert" className="bg-red-50 border-2 border-red-600 text-red-900 p-4 rounded-xl mb-5 text-base font-bold flex items-start gap-3 animate-shake">
+          <div data-testid="login-error-alert" className="bg-red-50 border-2 border-red-600 text-red-900 p-4 rounded-lg mb-5 text-base font-bold flex items-start gap-3">
             <ShieldAlert className="w-6 h-6 text-red-700 flex-shrink-0 mt-0.5" />
             <div>
               <p>{error}</p>
@@ -133,29 +108,18 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Patient Code Input */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-base font-bold text-stone-900">
-                {t("enter_code")}
-              </label>
-              <span className="text-xs font-semibold text-stone-500 bg-stone-100 px-2 py-0.5 rounded">
-                6–8 characters
-              </span>
-            </div>
+            <label className="block text-base font-bold text-stone-900 mb-1.5">
+              {t("enter_code")}
+            </label>
             <input
               data-testid="patient-code-input"
               type="text"
-              minLength={6}
               maxLength={8}
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSubmit(e);
-                }
-              }}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
               placeholder="e.g. DEMO01"
               disabled={lockoutMinutes > 0}
-              className="touch-target w-full border-3 border-stone-400 focus:border-red-700 rounded-xl px-4 py-3 text-2xl font-mono font-bold tracking-widest text-stone-900 uppercase focus:outline-none bg-stone-50 transition-colors shadow-inner"
+              className="touch-target w-full border-3 border-stone-400 rounded-lg px-4 py-3 text-2xl font-mono font-bold tracking-widest text-stone-900 uppercase focus:outline-none focus:border-red-700 bg-stone-50"
             />
           </div>
 
@@ -167,22 +131,12 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
             <input
               data-testid="patient-pin-input"
               type="password"
-              inputMode="numeric"
-              pattern="[0-9]*"
               maxLength={6}
               value={pin}
-              onChange={(e) => {
-                const numericOnly = e.target.value.replace(/\D/g, "").slice(0, 6);
-                setPin(numericOnly);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSubmit(e);
-                }
-              }}
+              readOnly
               placeholder="••••"
               disabled={lockoutMinutes > 0}
-              className="touch-target w-full border-3 border-stone-400 focus:border-red-700 rounded-xl px-4 py-3 text-3xl font-bold tracking-widest text-center text-stone-900 focus:outline-none bg-stone-50 transition-colors shadow-inner"
+              className="touch-target w-full border-3 border-stone-400 rounded-lg px-4 py-3 text-3xl font-bold tracking-widest text-center text-stone-900 focus:outline-none focus:border-red-700 bg-stone-50"
             />
           </div>
 
@@ -195,7 +149,7 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
                 data-testid={`keypad-${num}`}
                 onClick={() => handleKeypadPress(num.toString())}
                 disabled={lockoutMinutes > 0}
-                className="touch-target-lg py-3 rounded-xl border-2 border-stone-300 bg-stone-100 hover:bg-stone-200 active:scale-95 text-3xl font-black text-stone-900 transition-all shadow-xs"
+                className="touch-target-lg py-3 rounded-lg border-2 border-stone-300 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-3xl font-black text-stone-900"
               >
                 {num}
               </button>
@@ -204,7 +158,7 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
               type="button"
               onClick={() => handleKeypadPress("CLEAR")}
               disabled={lockoutMinutes > 0}
-              className="touch-target-lg py-3 rounded-xl border-2 border-stone-300 bg-stone-200 hover:bg-stone-300 active:scale-95 text-sm font-black text-stone-700 uppercase transition-all"
+              className="touch-target-lg py-3 rounded-lg border-2 border-stone-300 bg-stone-200 hover:bg-stone-300 text-sm font-black text-stone-700 uppercase"
             >
               Clear
             </button>
@@ -213,7 +167,7 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
               data-testid="keypad-0"
               onClick={() => handleKeypadPress("0")}
               disabled={lockoutMinutes > 0}
-              className="touch-target-lg py-3 rounded-xl border-2 border-stone-300 bg-stone-100 hover:bg-stone-200 active:scale-95 text-3xl font-black text-stone-900 transition-all shadow-xs"
+              className="touch-target-lg py-3 rounded-lg border-2 border-stone-300 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-3xl font-black text-stone-900"
             >
               0
             </button>
@@ -222,7 +176,7 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
               data-testid="keypad-backspace"
               onClick={() => handleKeypadPress("BACKSPACE")}
               disabled={lockoutMinutes > 0}
-              className="touch-target-lg py-3 rounded-xl border-2 border-stone-300 bg-stone-200 hover:bg-stone-300 active:scale-95 flex items-center justify-center text-stone-800 transition-all"
+              className="touch-target-lg py-3 rounded-lg border-2 border-stone-300 bg-stone-200 hover:bg-stone-300 flex items-center justify-center text-stone-800"
               aria-label="Delete digit"
             >
               <Delete className="w-7 h-7" />
@@ -233,8 +187,8 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
           <button
             data-testid="patient-submit-btn"
             type="submit"
-            disabled={code.trim().length < 6 || !pin.trim() || isLoading || lockoutMinutes > 0}
-            className="touch-target-lg w-full py-4 bg-red-700 hover:bg-red-800 active:scale-95 disabled:opacity-40 text-white font-black text-2xl rounded-xl border-2 border-red-950 flex items-center justify-center gap-3 mt-4 shadow-lg transition-all"
+            disabled={!code.trim() || !pin.trim() || isLoading || lockoutMinutes > 0}
+            className="touch-target-lg w-full py-4 bg-red-700 hover:bg-red-800 disabled:opacity-40 text-white font-black text-2xl rounded-lg border-2 border-red-950 flex items-center justify-center gap-3 mt-4"
           >
             {isLoading ? (
               <span>Checking...</span>
@@ -247,28 +201,16 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
           </button>
         </form>
 
-        {/* Demo Credentials Quick Login */}
-        <div className="mt-5 pt-4 border-t-2 border-stone-200 text-center space-y-2">
+        {/* Demo Credentials Quick Fill */}
+        <div className="mt-5 pt-4 border-t-2 border-stone-200 text-center">
           <button
-            data-testid="one-click-demo-patient"
+            data-testid="quick-demo-patient"
             type="button"
-            onClick={handleOneClickDemoLogin}
-            disabled={isLoading}
-            className="w-full py-3 px-4 bg-amber-50 hover:bg-amber-100 active:scale-98 text-amber-950 font-black text-base rounded-xl border-2 border-amber-400 flex items-center justify-center gap-2 transition-all shadow-sm"
+            onClick={handleQuickDemoFill}
+            className="text-xs font-bold text-stone-600 hover:text-red-700 underline"
           >
-            <Sparkles className="w-5 h-5 text-amber-700" />
-            <span>⚡ One-Click Demo Login (DEMO01 • PIN: 1234)</span>
+            Demo Auto-Fill: Code: DEMO01 | PIN: 1234
           </button>
-          <div className="flex items-center justify-center gap-2">
-            <button
-              data-testid="quick-demo-patient"
-              type="button"
-              onClick={handleQuickDemoFill}
-              className="text-xs font-bold text-stone-600 hover:text-stone-900 underline px-2 py-1 transition-colors"
-            >
-              (or click to auto-fill inputs only)
-            </button>
-          </div>
         </div>
       </div>
 
@@ -290,4 +232,3 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
     </div>
   );
 }
-

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { AlertTriangle, MapPin, CheckCircle, Clock, X, ShieldAlert, PhoneCall } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { AlertTriangle, MapPin, CheckCircle, Clock, X } from "lucide-react";
 import { api } from "../../services/api";
 import { useLanguage } from "../../context/LanguageContext";
 import { bhashiniService } from "../../services/bhashini";
-import { soundEffects } from "../../utils/soundEffects";
 
 export default function SOSButton({ patientId, emergencyContact = "+91 98640 11223", emergencyName = "Bikash Baruah" }) {
   const { t, language } = useLanguage();
@@ -11,10 +10,9 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
   const [isSending, setIsSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
   const [smsStatus, setSmsStatus] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [debounceSeconds, setDebounceSeconds] = useState(0);
-  const [gpsLocation, setGpsLocation] = useState(null);
-  const [gettingLocation, setGettingLocation] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const cancelButtonRef = useRef(null);
 
   // Debounce watchdog timer
   useEffect(() => {
@@ -27,54 +25,51 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
     return () => clearInterval(timer);
   }, [debounceSeconds]);
 
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    cancelButtonRef.current?.focus();
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && !isSending) setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, isSending]);
+
   const handleOpen = () => {
-    if (debounceSeconds > 0) return;
-    soundEffects.playAlert();
+    if (debounceSeconds > 0) {
+      setErrorMessage(`An SOS demo alert is already active. Please wait ${debounceSeconds} seconds before trying again.`);
+      return;
+    }
     setIsOpen(true);
     setSentSuccess(false);
     setSmsStatus("");
     setErrorMessage("");
-    setGpsLocation(null);
-
-    // Pre-fetch location gently
-    if ("geolocation" in navigator) {
-      setGettingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setGpsLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          setGettingLocation(false);
-        },
-        () => {
-          setGettingLocation(false);
-        },
-        { timeout: 3500, maximumAge: 10000 }
-      );
-    }
   };
 
   const handleConfirmSOS = async () => {
     setIsSending(true);
-    setErrorMessage("");
 
-    let lat = gpsLocation?.lat || null;
-    let lng = gpsLocation?.lng || null;
-    let locationUnavailable = !lat || !lng;
+    let lat = null;
+    let lng = null;
+    let locationUnavailable = false;
 
-    // If not already fetched, attempt one quick fetch
-    if (!lat && "geolocation" in navigator) {
-      try {
+    // Try browser geolocation with 4s timeout
+    try {
+      if ("geolocation" in navigator) {
         const pos = await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
-            timeout: 2500,
+            timeout: 4000,
             maximumAge: 10000
           });
         });
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
-        locationUnavailable = false;
-      } catch {
+      } else {
         locationUnavailable = true;
       }
+    } catch (geoErr) {
+      console.warn("Geolocation denied or timed out:", geoErr);
+      locationUnavailable = true;
     }
 
     try {
@@ -90,7 +85,6 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
       setSentSuccess(true);
       setDebounceSeconds(60); // 60-second debounce
       setSmsStatus(res.alert?.details?.simulated_sms_sent_to || `${emergencyName} (${emergencyContact})`);
-      soundEffects.playChime();
 
       // Gentle voice reassurance in patient's language
       const speakMsg = language === "as"
@@ -103,24 +97,25 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
       setTimeout(() => {
         setIsOpen(false);
         setSentSuccess(false);
-      }, 5000);
+      }, 4000);
     } catch (err) {
       setIsSending(false);
-      setErrorMessage(err.message || "Unable to reach server. Please check your network connection.");
+      setErrorMessage("The simulated alert could not be saved. Please check your connection and try again.");
     }
   };
 
   return (
     <>
+      {errorMessage && <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-lg rounded-lg border-2 border-red-700 bg-red-50 p-4 font-bold text-red-950" role="alert">{errorMessage}</div>}
       <button
         data-testid="sos-button"
         onClick={handleOpen}
         disabled={debounceSeconds > 0}
         aria-label="Emergency SOS Alert Button"
-        className={`touch-target flex items-center justify-center gap-2 px-6 py-3 font-bold text-white uppercase rounded-xl text-lg tracking-wider border-2 border-white transition-all shadow-lg active:scale-95 ${
+        className={`touch-target flex items-center justify-center gap-2 px-6 py-3 font-bold text-white uppercase rounded-md text-lg tracking-wider border-2 border-white transition-all ${
           debounceSeconds > 0
             ? "bg-stone-500 cursor-not-allowed opacity-80"
-            : "bg-gradient-to-r from-red-700 to-rose-700 hover:from-red-800 hover:to-rose-800 ring-4 ring-red-300"
+            : "bg-red-700 hover:bg-red-800 active:bg-red-900 ring-4 ring-red-300"
         }`}
       >
         <AlertTriangle className="w-6 h-6 animate-pulse" />
@@ -132,82 +127,36 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
           data-testid="sos-modal"
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
         >
-          <div className="bg-white border-4 border-red-700 rounded-2xl max-w-lg w-full p-6 text-patient-text ner-gamusa-border-top shadow-2xl animate-in fade-in zoom-in-95">
+          <div className="bg-white border-4 border-red-700 rounded-lg max-w-lg w-full p-6 text-patient-text ner-gamusa-border-top">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <span className="rounded-full border border-amber-400 bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-950">Demo mode — no real SMS is sent</span>
+              <button onClick={() => setIsOpen(false)} disabled={isSending} className="touch-target rounded border-2 border-stone-300 p-2 text-stone-700" aria-label="Close emergency alert dialog"><X className="h-5 w-5" /></button>
+            </div>
             {!sentSuccess ? (
               <>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3 text-red-700">
-                    <div className="p-3 bg-red-100 rounded-full">
-                      <ShieldAlert className="w-8 h-8 text-red-700" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-black text-stone-900">{t("sos_confirm_title")}</h2>
-                      <span className="text-xs font-bold uppercase tracking-wider text-red-700">Emergency Protocol</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      soundEffects.playTap();
-                      setIsOpen(false);
-                    }}
-                    className="p-2 text-stone-400 hover:text-stone-700 rounded-lg"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
+                <div className="flex items-center gap-3 text-red-700 mb-4">
+                  <AlertTriangle className="w-10 h-10" />
+                  <h2 className="text-2xl font-black">{t("sos_confirm_title")}</h2>
                 </div>
 
-                <p className="text-lg mb-4 leading-relaxed text-stone-800 font-medium">
+                <p className="text-lg mb-6 leading-relaxed text-stone-800">
                   {t("sos_confirm_desc")}
                 </p>
 
-                {/* Contact destination card */}
-                <div className="bg-stone-50 border-2 border-stone-200 rounded-xl p-3 mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <PhoneCall className="w-5 h-5 text-red-700" />
-                    <div>
-                      <div className="text-xs text-stone-500 font-bold uppercase">Primary Emergency Contact</div>
-                      <div className="text-base font-black text-stone-900">{emergencyName} ({emergencyContact})</div>
-                    </div>
-                  </div>
-                  <span className="text-xs font-black bg-red-100 text-red-900 px-2.5 py-1 rounded-full border border-red-200">
-                    SMS & Portal
-                  </span>
+                <div className="bg-amber-50 border-2 border-amber-300 p-3 rounded mb-6 text-sm flex items-center gap-2 text-amber-950 font-medium">
+                  <MapPin className="w-5 h-5 flex-shrink-0 text-amber-700" />
+                  <span>GPS location will be automatically shared with {emergencyName}. If GPS is off, alert will note "location unavailable".</span>
                 </div>
 
-                {/* GPS Location status */}
-                <div className="bg-amber-50 border-2 border-amber-300 p-3 rounded-xl mb-6 text-sm flex items-start gap-2.5 text-amber-950 font-medium">
-                  <MapPin className="w-5 h-5 flex-shrink-0 text-amber-700 mt-0.5" />
-                  <div>
-                    {gettingLocation ? (
-                      <span>Acquiring GPS coordinates for rescue dispatch...</span>
-                    ) : gpsLocation ? (
-                      <span>
-                        Location ready: <strong className="font-mono">{gpsLocation.lat.toFixed(4)}° N, {gpsLocation.lng.toFixed(4)}° E</strong> (Will be included in dispatch).
-                      </span>
-                    ) : (
-                      <span>GPS location optional. If unavailable, alert will dispatch immediately noting "location pending".</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Error Banner if any */}
-                {errorMessage && (
-                  <div className="bg-red-50 border-2 border-red-300 p-3 rounded-xl mb-4 text-sm text-red-900 font-bold">
-                    {errorMessage}
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     data-testid="sos-cancel-btn"
-                    onClick={() => {
-                      soundEffects.playTap();
-                      setIsOpen(false);
-                    }}
+                    ref={cancelButtonRef}
+                    onClick={() => setIsOpen(false)}
                     disabled={isSending}
-                    className="touch-target flex-1 py-4 px-6 border-2 border-stone-300 font-bold rounded-xl text-lg bg-stone-100 hover:bg-stone-200 active:scale-95 text-stone-900 transition-all"
+                    className="touch-target flex-1 py-4 px-6 border-2 border-stone-400 font-bold rounded text-lg bg-stone-100 hover:bg-stone-200 text-stone-900"
                   >
                     {t("sos_cancel")}
                   </button>
@@ -216,7 +165,7 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
                     data-testid="sos-confirm-btn"
                     onClick={handleConfirmSOS}
                     disabled={isSending}
-                    className="touch-target-lg flex-1 py-4 px-6 font-bold rounded-xl text-xl bg-red-700 hover:bg-red-800 active:scale-95 text-white flex items-center justify-center gap-2 ring-4 ring-red-200 shadow-lg transition-all"
+                    className="touch-target-lg flex-1 py-4 px-6 font-bold rounded text-xl bg-red-700 hover:bg-red-800 text-white flex items-center justify-center gap-2 ring-2 ring-red-950"
                   >
                     {isSending ? (
                       <span>{t("sos_sending")}</span>
@@ -231,18 +180,11 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
               </>
             ) : (
               <div className="text-center py-6">
-                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 ring-8 ring-emerald-50">
-                  <CheckCircle className="w-12 h-12 text-emerald-600" />
-                </div>
-                <h3 className="text-2xl font-black text-emerald-900 mb-2">{t("sos_sent")}</h3>
-                <p className="text-stone-700 text-base mb-3 leading-relaxed">
-                  Alert dispatched to <strong>{smsStatus}</strong>. Stay calm, help has been notified.
-                </p>
-                <div className="inline-block bg-red-100 text-red-950 font-mono text-xs px-3 py-1 rounded-md border border-red-300 mb-4 font-bold">
-                  [ SIMULATED SMS DISPATCH & AUDIT LOGGED — SIH26003 ]
-                </div>
-                <div className="inline-flex items-center gap-2 text-stone-600 bg-stone-100 px-4 py-2 rounded-xl text-sm">
-                  <Clock className="w-4 h-4 text-stone-500" />
+                <CheckCircle className="w-16 h-16 text-green-700 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-green-800 mb-2">{t("sos_sent")}</h3>
+                <p className="text-stone-700 text-base mb-2">Simulated SMS dispatched to: <strong>{smsStatus}</strong></p>
+                <div className="inline-flex items-center gap-2 text-stone-600 bg-stone-100 px-4 py-2 rounded text-sm mt-3">
+                  <Clock className="w-4 h-4" />
                   <span>Debounce active: 60s security cooldown</span>
                 </div>
               </div>
@@ -253,4 +195,3 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
     </>
   );
 }
-

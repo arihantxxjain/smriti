@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException, Response, Request, Depends, status
-from app.database import get_db
+from app.database import get_db, serialize_doc
 from app.auth import hash_password, verify_password, hash_pin, verify_pin, create_access_token, get_current_user
 from app.schemas import CaregiverRegister, CaregiverLogin, PatientLogin, TokenResponse
 from bson import ObjectId
@@ -218,9 +218,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     user_copy = current_user.copy()
     user_copy.pop("password_hash", None)
     user_copy.pop("pin_hash", None)
-    if "_id" in user_copy:
-        user_copy["_id"] = str(user_copy["_id"])
-    return user_copy
+    return serialize_doc(user_copy)
 
 @router.post("/logout")
 async def logout(response: Response):

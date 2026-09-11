@@ -128,6 +128,7 @@ export const bhashiniService = {
 
       recognition.onend = () => {
         clearTimeout(timeoutId);
+        if (currentRecognition === recognition) currentRecognition = null;
         if (onEnd) onEnd();
       };
 

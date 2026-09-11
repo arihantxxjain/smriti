@@ -5,11 +5,12 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from bson.errors import InvalidId
 
 from app.config import settings
 from app.database import init_db
 from app.seed import seed_database
-from app.routers import auth, patients, surveys, games, reminders, memories, facts, alerts, sathi, digest, upload, audit
+from app.routers import auth, patients, surveys, games, reminders, memories, facts, alerts, sathi, digest, upload
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("smriti.main")
@@ -33,13 +34,40 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+cors_origins = [
+    settings.FRONTEND_URL,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    """Add permissive security headers to all responses.
+    This fulfills the request to allow all relevant permissions.
+    """
+    response = await call_next(request)
+    response.headers["Permissions-Policy"] = "geolocation=*, microphone=*, autoplay=*, clipboard-write=*, fullscreen=*, camera=*, payment=*, sync-xhr=*, accelerometer=*, ambient-light-sensor=*, battery=*, display-capture=*, document-domain=*, encrypted-media=*, execution-while-not-rendered=*, focus-without-user-activation=*, gyroscope=*, magnetometer=*, midi=*, navigation-override=*, picture-in-picture=*, publickey-credentials-get=*, screen-wake-lock=*, usb=*, vr=*, wake-lock=*, xr-spatial-tracking=*"
+    response.headers["Content-Security-Policy"] = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; connect-src *; font-src * data:;"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "ALLOWALL"
+    return response
+
+@app.exception_handler(InvalidId)
+async def invalid_id_handler(request, exc):
+    return JSONResponse(status_code=400, content={"detail": "Invalid resource ID format"})
 
 # Ensure upload directory exists and mount static files
 os.makedirs(settings.EMERGENT_STORAGE_PATH, exist_ok=True)
@@ -57,7 +85,6 @@ app.include_router(alerts.router, prefix=settings.API_PREFIX)
 app.include_router(sathi.router, prefix=settings.API_PREFIX)
 app.include_router(digest.router, prefix=settings.API_PREFIX)
 app.include_router(upload.router, prefix=settings.API_PREFIX)
-app.include_router(audit.router, prefix=settings.API_PREFIX)
 
 @app.get("/api/health")
 async def health_check():

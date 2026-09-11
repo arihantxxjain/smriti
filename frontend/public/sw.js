@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smriti-cache-v2';
+const CACHE_NAME = 'smriti-cache-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -31,32 +31,16 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-first for navigation and HTML; SWR for static assets
+// Cache-first for static assets, SWR for navigation and API GETs
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // For API or non-GET requests, let them pass directly to network
-  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+  // For API POST/PUT requests, let them pass directly to network (offline queue handles offline state)
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  // For navigation / HTML requests, always network-first
-  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // SWR for static assets
+  // SWR for GET requests
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(event.request).then((cachedResponse) => {
@@ -67,9 +51,12 @@ self.addEventListener('fetch', (event) => {
             }
             return networkResponse;
           })
-          .catch(() => cachedResponse);
+          .catch(() => {
+            // Offline fallback
+            return cachedResponse;
+          });
 
-        return fetchPromise || cachedResponse;
+        return cachedResponse || fetchPromise;
       });
     })
   );

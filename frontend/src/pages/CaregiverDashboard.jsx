@@ -86,66 +86,19 @@ export default function CaregiverDashboard({ onSwitchToPatient }) {
 
       {/* Main Container */}
       <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6 flex-1">
-        {/* Top Attention Summary Banner */}
-        <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-white p-6 rounded-2xl shadow-md border border-stone-700">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-xs font-black uppercase tracking-widest text-stone-300">Clinical Overview & Monitoring</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-                Attention Summary
-              </h2>
-              <p className="text-sm text-stone-300 max-w-xl">
-                Real-time surveillance across registered patients. Track cognitive decline alerts, adherence to daily routines, and wandering perimeter safety.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-800/80 p-3.5 rounded-xl border border-stone-700 text-center">
-              <div className="px-3 py-1">
-                <span className="text-xs font-bold text-stone-400 block uppercase">Patients</span>
-                <span className="text-2xl font-black text-white">{patients.length}</span>
-              </div>
-
-              <div className="px-3 py-1 border-l border-stone-700">
-                <span className="text-xs font-bold text-stone-400 block uppercase">Active Alerts</span>
-                {(() => {
-                  const totalAlerts = patients.reduce((acc, p) => acc + (p.active_alerts_count || 0), 0);
-                  return (
-                    <span className={`text-2xl font-black ${totalAlerts > 0 ? "text-red-400" : "text-emerald-400"}`}>
-                      {totalAlerts}
-                    </span>
-                  );
-                })()}
-              </div>
-
-              <div className="px-3 py-1 border-l border-stone-700">
-                <span className="text-xs font-bold text-stone-400 block uppercase">Memory Trend</span>
-                <span className="text-2xl font-black text-amber-400">↘ -21 pts</span>
-              </div>
-
-              <div className="px-3 py-1 border-l border-stone-700">
-                <span className="text-xs font-bold text-stone-400 block uppercase">Adherence</span>
-                <span className="text-2xl font-black text-emerald-400">92%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
+        {/* Top Action Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
           <div>
-            <h3 className="text-xl font-bold text-stone-900">Patient Care Roster</h3>
-            <p className="text-xs text-stone-500">
-              Select any patient to review longitudinal graphs, manage daily medications, configure geofences, and review audit logs.
+            <h2 className="text-2xl font-bold text-stone-900">Patient Care Roster</h2>
+            <p className="text-sm text-stone-600">
+              Manage elderly dementia patients, track cognitive trends, and configure intake surveys.
             </p>
           </div>
 
           <button
             data-testid="add-patient-btn"
             onClick={() => setIsAddPatientOpen(true)}
-            className="px-5 py-2.5 bg-caregiver hover:bg-caregiver-secondary text-white font-bold rounded-xl text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95 shrink-0"
+            className="px-5 py-2.5 bg-caregiver hover:bg-caregiver-secondary text-white font-bold rounded-lg text-sm flex items-center gap-2 shadow-sm transition-colors"
           >
             <UserPlus className="w-4 h-4" />
             <span>Add Patient & Intake Survey</span>
@@ -154,26 +107,15 @@ export default function CaregiverDashboard({ onSwitchToPatient }) {
 
         {/* Patients Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 animate-pulse">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="bg-white border-2 border-stone-200 rounded-2xl p-5 h-56 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="h-4 bg-stone-200 rounded w-1/3"></div>
-                  <div className="h-6 bg-stone-200 rounded w-2/3"></div>
-                  <div className="h-3 bg-stone-100 rounded w-1/2"></div>
-                </div>
-                <div className="h-12 bg-stone-100 rounded"></div>
-              </div>
-            ))}
-          </div>
+          <div className="text-center py-20 font-bold text-stone-500">Loading patients roster...</div>
         ) : patients.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
+          <div className="text-center py-20 bg-white rounded-xl border border-stone-200 p-8">
             <Users className="w-12 h-12 text-stone-400 mx-auto mb-3" />
             <h3 className="text-lg font-bold text-stone-800 mb-1">No patients registered yet</h3>
             <p className="text-sm text-stone-500 mb-4">Click "Add Patient" to register an elderly family member and complete their intake survey.</p>
             <button
               onClick={() => setIsAddPatientOpen(true)}
-              className="px-5 py-2.5 bg-caregiver hover:bg-caregiver-secondary text-white font-bold rounded-xl text-sm shadow-sm"
+              className="px-4 py-2 bg-caregiver text-white font-bold rounded-lg text-sm"
             >
               Register First Patient
             </button>
@@ -188,21 +130,21 @@ export default function CaregiverDashboard({ onSwitchToPatient }) {
                   key={p.id || p._id}
                   data-testid={`patient-card-${p.code}`}
                   onClick={() => setSelectedPatientId(p.id || p._id)}
-                  className="bg-white border-2 border-stone-200 hover:border-caregiver rounded-2xl p-5 shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group"
+                  className="bg-white border-2 border-stone-200 hover:border-caregiver rounded-xl p-5 shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
                 >
                   <div>
                     {/* Top Badges */}
                     <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-xs font-bold text-stone-700 bg-stone-100 px-2.5 py-0.5 rounded-lg border border-stone-200">
+                      <span className="font-mono text-xs font-bold text-stone-700 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
                         CODE: {p.code}
                       </span>
 
-                      <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-caregiver/10 text-caregiver">
+                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-caregiver/10 text-caregiver">
                         {p.dementia_stage} stage
                       </span>
                     </div>
 
-                    <h3 className="text-xl font-black text-stone-900 mb-1 leading-tight group-hover:text-caregiver transition-colors">
+                    <h3 className="text-xl font-bold text-stone-900 mb-1 leading-tight">
                       {p.name}
                     </h3>
                     <p className="text-xs text-stone-500 mb-4">
@@ -210,7 +152,7 @@ export default function CaregiverDashboard({ onSwitchToPatient }) {
                     </p>
 
                     {/* Vitals Summary */}
-                    <div className="grid grid-cols-2 gap-2 bg-stone-50 p-3 rounded-xl border border-stone-200 mb-4 text-xs">
+                    <div className="grid grid-cols-2 gap-2 bg-stone-50 p-3 rounded-lg border border-stone-200 mb-4 text-xs">
                       <div>
                         <span className="text-stone-500 font-bold block">Latest Score</span>
                         <span className="text-base font-black text-stone-800">
@@ -227,7 +169,7 @@ export default function CaregiverDashboard({ onSwitchToPatient }) {
                   </div>
 
                   {/* Card Action */}
-                  <div className="flex items-center justify-between pt-3 border-t border-stone-100 text-xs font-bold text-caregiver group-hover:translate-x-1 transition-transform">
+                  <div className="flex items-center justify-between pt-3 border-t border-stone-100 text-xs font-bold text-caregiver">
                     <span>View Dossier & Trends</span>
                     <ArrowRight className="w-4 h-4" />
                   </div>
@@ -237,7 +179,6 @@ export default function CaregiverDashboard({ onSwitchToPatient }) {
           </div>
         )}
       </main>
-
 
       {/* Add Patient Modal */}
       <AddPatientModal

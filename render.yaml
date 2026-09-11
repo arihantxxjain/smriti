@@ -1,19 +1,17 @@
-services:
-  # Unified Full-Stack Service (FastAPI + Embedded React PWA)
+﻿services:
+  # Unified Full-Stack Service (FastAPI + Embedded React PWA via Multi-Stage Docker)
   - type: web
     name: smriti-dementia-care
-    runtime: python
+    env: docker
+    dockerfilePath: ./Dockerfile
     region: singapore # Closest to North East India
     plan: free
-    buildCommand: "npm --prefix frontend install && npm --prefix frontend run build && pip install -r backend/requirements.txt"
-    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/health
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.13.0
       - key: MONGO_URL
         sync: false
         value: "mongodb://localhost:27017/smriti" # Falls back to in-memory mongomock if external MongoDB URI not supplied
       - key: JWT_SECRET
         generateValue: true
-      - key: REACT_APP_BACKEND_URL
-        value: ""
+      - key: PORT
+        value: "10000"

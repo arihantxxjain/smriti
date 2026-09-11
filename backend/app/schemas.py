@@ -14,7 +14,7 @@ class CaregiverLogin(BaseModel):
     password: str
 
 class PatientLogin(BaseModel):
-    code: str
+    code: str = Field(pattern=r"^[A-Za-z0-9]{6,8}$")
     pin: str
 
 class TokenResponse(BaseModel):
@@ -119,6 +119,7 @@ class MemoryCreate(BaseModel):
 
 # Reminder Schemas
 class ReminderCreate(BaseModel):
+    patient_id: Optional[str] = None
     title: str
     time_str: str  # e.g. "08:30"
     category: str = "medication"
@@ -140,19 +141,9 @@ class AlertUpdate(BaseModel):
     read: Optional[bool] = None
     dismissed: Optional[bool] = None
     resolved_by: Optional[str] = None
-    resolution_note: Optional[str] = None
 
 # Sathi Companion Schemas
 class SathiChatRequest(BaseModel):
     patient_id: str
     message: str
     language: Optional[str] = "as"
-
-# Clinical Audit Log Schema
-class AuditLogSchema(BaseModel):
-    patient_id: str
-    action_type: str  # PIN_RESET, ALERT_RESOLVED, DATA_DELETED, GEOFENCE_UPDATED, REMINDER_MODIFIED
-    actor_id: Optional[str] = None
-    actor_name: str
-    details: Dict[str, Any] = {}
-    timestamp: Optional[str] = None

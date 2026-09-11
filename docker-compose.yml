@@ -1,4 +1,4 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   smriti:
@@ -8,6 +8,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - PORT=8000
       - MONGO_URL=mongodb://mongo:27017/smriti
       - JWT_SECRET=smriti-secure-prod-key-2026-32chars
     depends_on:

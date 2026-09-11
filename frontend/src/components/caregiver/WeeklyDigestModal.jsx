@@ -124,16 +124,11 @@ export default function WeeklyDigestModal({ patientId, isOpen, onClose }) {
             <button
               data-testid="send-digest-btn"
               onClick={handleSendNow}
-              disabled={isSending || isLoading || sendResult?.status === "sent" || sendResult?.status === "queued"}
-              className="px-5 py-2 bg-caregiver hover:bg-caregiver-secondary disabled:opacity-50 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all shadow-xs"
+              disabled={isSending || isLoading}
+              className="px-5 py-2 bg-caregiver hover:bg-caregiver-secondary disabled:opacity-50 text-white text-sm font-bold rounded-lg flex items-center gap-2"
             >
               {isSending ? (
-                <span>Dispatching Email...</span>
-              ) : sendResult?.status === "sent" || sendResult?.status === "queued" ? (
-                <>
-                  <CheckCircle className="w-4 h-4 text-emerald-300" />
-                  <span>Digest Dispatched</span>
-                </>
+                <span>Dispatching...</span>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
@@ -147,4 +142,3 @@ export default function WeeklyDigestModal({ patientId, isOpen, onClose }) {
     </div>
   );
 }
-

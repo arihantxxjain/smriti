@@ -22,23 +22,13 @@ function AppContent() {
     );
   }
 
-  // If authenticated as patient: always show PatientDashboard
-  if (user && user.role === "patient") {
-    return <PatientDashboard />;
-  }
-
-  // If authenticated as caregiver:
-  if (user && user.role === "caregiver") {
-    // If caregiver clicked "Go to Patient View", display PatientLoginPage so they can test/demo patient view
-    if (selectedRole === "patient") {
-      return (
-        <PatientLoginPage
-          onSwitchToCaregiver={() => setSelectedRole("caregiver")}
-          onBackToLanding={() => setSelectedRole(null)}
-        />
-      );
+  // If user is already authenticated
+  if (user) {
+    if (user.role === "caregiver") {
+      return <CaregiverDashboard onSwitchToPatient={() => setSelectedRole("patient")} />;
+    } else if (user.role === "patient") {
+      return <PatientDashboard />;
     }
-    return <CaregiverDashboard onSwitchToPatient={() => setSelectedRole("patient")} />;
   }
 
   // Not authenticated: Route based on selectedRole

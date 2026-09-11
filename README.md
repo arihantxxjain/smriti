@@ -6,6 +6,16 @@
 
 > **Voice-first, mobile-responsive AI dementia care web app designed specifically for elderly patients and family caregivers in North Eastern Region (NER) India (SIH26003 / MDoNER).**
 
+## Phase 1 demo-safe updates
+
+This copy was created separately from the original project for SIH demo readiness. It does not require paid API keys for the implemented voice flow.
+
+- Memory Match now gives every cultural pair a distinct visual cue and preserves the final match response when saving the result.
+- Patient codes are consistently validated and described as 6–8 alphanumeric characters, including `DEMO01`.
+- Sathi provides visible listening, unsupported-browser, permission, no-speech, retry, and typed-message fallback feedback. Browser speech recognition and text-to-speech are used locally when supported.
+- SOS visibly states that it is in demo mode and sends no real SMS. It has an in-page failure message, close button, and Escape-to-close support.
+- Sathi and SOS dialogs now support Escape-to-close and announce feedback to assistive technologies.
+
 ---
 
 ## 🏛️ Authentic North Eastern Cultural & Clinical Design
@@ -83,7 +93,7 @@ See [memory/test_credentials.md](memory/test_credentials.md):
 
 ---
 
-## 🚀 How to Run the Project
+## 🚀 How to Run Locally
 
 ### 1. Start Backend (FastAPI + MongoDB)
 ```bash
@@ -107,3 +117,40 @@ npm install
 npm run dev
 ```
 > The frontend dev server runs on `http://localhost:5173`.
+
+---
+
+## 🚢 Cloud Deployment Guide
+
+### Option 1: Render.com (Recommended — Unified 1-Click Service)
+Smriti is pre-configured with a multi-stage `Dockerfile` and `render.yaml` Blueprint. Both the React frontend and FastAPI backend run together as a single web service:
+
+1. Push this repository to your GitHub account (`arihantxxjain/smriti`).
+2. Go to [Render Dashboard](https://dashboard.render.com).
+3. Click **New +** -> **Web Service**.
+4. Connect your GitHub repository `arihantxxjain/smriti`.
+5. Under **Environment**, choose **Docker** (Render will automatically detect `Dockerfile`).
+6. Set the following Environment Variables (optional, defaults are demo-ready):
+   - `PORT`: `10000`
+   - `MONGO_URL`: `mongodb+srv://...` (or leave blank to use the built-in in-memory database)
+   - `JWT_SECRET`: (Click generate)
+7. Click **Create Web Service**.
+8. Once deployed, Render will provide a live URL (`https://smriti-dementia-care.onrender.com`) serving the entire application!
+
+---
+
+### Option 2: Railway.app (1-Click Docker Deploy)
+1. Go to [Railway](https://railway.app) and click **New Project**.
+2. Select **Deploy from GitHub repo** and select `arihantxxjain/smriti`.
+3. Railway automatically detects `Dockerfile` and builds both frontend and backend.
+4. Add a domain in Service Settings -> Networking -> Generate Domain.
+
+---
+
+### Option 3: Docker Compose (Local / VPS / EC2)
+Run the entire production stack locally or on a cloud VPS with MongoDB included:
+```bash
+docker-compose up --build -d
+```
+Access the application at `http://localhost:8000`.
+

@@ -44,7 +44,7 @@ export default function LandingPage({ onSelectPatient, onSelectCaregiver }) {
             <ul className="space-y-2.5 text-sm font-bold text-stone-800 mb-6">
               <li className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-red-700 flex-shrink-0" />
-                <span>6–8 Character Code + 4-Digit PIN with on-screen keypad</span>
+                <span>8-Char Code + 4-Digit PIN with on-screen keypad</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-red-700 flex-shrink-0" />

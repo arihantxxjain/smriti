@@ -115,16 +115,13 @@ async def get_patient_alerts(patient_id: str, current_user: dict = Depends(get_c
 async def update_alert(alert_id: str, payload: AlertUpdate, current_user: dict = Depends(get_current_user)):
     db = get_db()
     update_data = {}
-    now_iso = datetime.now(timezone.utc).isoformat()
     if payload.read is not None:
         update_data["read"] = payload.read
     if payload.dismissed is not None:
         update_data["dismissed"] = payload.dismissed
     if payload.resolved_by is not None:
         update_data["resolved_by"] = payload.resolved_by
-        update_data["resolved_at"] = now_iso
-    if payload.resolution_note is not None:
-        update_data["resolution_note"] = payload.resolution_note
+        update_data["resolved_at"] = datetime.now(timezone.utc).isoformat()
     
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -136,22 +133,4 @@ async def update_alert(alert_id: str, payload: AlertUpdate, current_user: dict =
     )
     if not result:
         raise HTTPException(status_code=404, detail="Alert not found")
-
-    # If alert was resolved/dismissed, record in audit log
-    if payload.dismissed:
-        audit_entry = {
-            "patient_id": str(result.get("patient_id", "")),
-            "action_type": "ALERT_RESOLVED",
-            "actor_id": current_user.get("id"),
-            "actor_name": payload.resolved_by or current_user.get("name", "Caregiver"),
-            "details": {
-                "alert_id": alert_id,
-                "alert_type": result.get("type"),
-                "severity": result.get("severity"),
-                "resolution_note": payload.resolution_note or "Marked as resolved"
-            },
-            "timestamp": now_iso
-        }
-        await db.audit_logs.insert_one(audit_entry)
-
     return serialize_doc(result)

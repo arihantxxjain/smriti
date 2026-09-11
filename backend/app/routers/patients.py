@@ -188,31 +188,14 @@ async def reset_patient_pin(
     if not payload.new_pin.isdigit() or len(payload.new_pin) not in (4, 6):
         raise HTTPException(status_code=400, detail="PIN must be 4 or 6 numeric digits")
     
-    now_iso = datetime.now(timezone.utc).isoformat()
     await db.patients.update_one(
         {"_id": patient["_id"]},
         {"$set": {
             "pin_hash": hash_pin(payload.new_pin),
             "failed_login_attempts": 0,
-            "lockout_until": None,
-            "last_pin_reset_at": now_iso
+            "lockout_until": None
         }}
     )
-
-    # Record in audit log
-    audit_entry = {
-        "patient_id": patient_id,
-        "action_type": "PIN_RESET",
-        "actor_id": current_caregiver.get("id"),
-        "actor_name": current_caregiver.get("name", "Dr. Ananya Sarmah"),
-        "details": {
-            "action": "Security PIN reset & account lockout cleared",
-            "pin_length": len(payload.new_pin)
-        },
-        "timestamp": now_iso
-    }
-    await db.audit_logs.insert_one(audit_entry)
-
     return {"message": "Patient PIN reset successfully, lockout cleared"}
 
 @router.put("/{patient_id}/geofence")
@@ -226,31 +209,8 @@ async def update_geofence(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found or unauthorized")
     
-    # Coordinate and radius validation
-    if not (-90.0 <= payload.center_lat <= 90.0) or not (-180.0 <= payload.center_lng <= 180.0):
-        raise HTTPException(status_code=400, detail="Coordinates out of valid geographical range")
-    if payload.radius_m < 50.0 or payload.radius_m > 5000.0:
-        raise HTTPException(status_code=400, detail="Safe boundary radius must be between 50m and 5000m (5 km)")
-
-    now_iso = datetime.now(timezone.utc).isoformat()
     await db.patients.update_one(
         {"_id": patient["_id"]},
         {"$set": {"geofence": payload.model_dump()}}
     )
-
-    # Record in audit log
-    audit_entry = {
-        "patient_id": patient_id,
-        "action_type": "GEOFENCE_UPDATED",
-        "actor_id": current_caregiver.get("id"),
-        "actor_name": current_caregiver.get("name", "Caregiver"),
-        "details": {
-            "center_lat": payload.center_lat,
-            "center_lng": payload.center_lng,
-            "radius_m": payload.radius_m
-        },
-        "timestamp": now_iso
-    }
-    await db.audit_logs.insert_one(audit_entry)
-
     return {"message": "Geofence updated successfully", "geofence": payload.model_dump()}

@@ -21,8 +21,12 @@ async def get_patient_reminders(patient_id: str, current_user: dict = Depends(ge
 async def create_reminder(payload: ReminderCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
     now_utc = datetime.now(timezone.utc).isoformat()
+    patient_id = current_user.get("id") if current_user.get("role") == "patient" else payload.patient_id
+    if not patient_id:
+        raise HTTPException(status_code=400, detail="patient_id is required")
+
     doc = {
-        "patient_id": current_user.get("id") if current_user.get("role") == "patient" else payload.patient_id,
+        "patient_id": patient_id,
         "title": payload.title.strip(),
         "time_str": payload.time_str,
         "category": payload.category,
