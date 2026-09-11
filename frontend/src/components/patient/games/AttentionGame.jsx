@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle2, XCircle, RotateCcw, Award } from "lucide-react";
 import { api } from "../../../services/api";
 import { offlineStorage } from "../../../services/offlineStorage";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function AttentionGame({ patientId, onBack, onComplete }) {
+  const { t } = useLanguage();
   const [rounds, setRounds] = useState([]);
   const [currentRoundIdx, setCurrentRoundIdx] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState(null);
@@ -29,7 +31,7 @@ export default function AttentionGame({ patientId, onBack, onComplete }) {
           id: "r1",
           prompt: "Which item does NOT belong to traditional Assamese textiles?",
           options: [
-            { id: "gamusa", text: "Gamusa (গামোচা)", correct: false },
+            { id: "gamusa", text: "Gamosa", correct: false },
             { id: "muga", text: "Muga Silk Mekhela", correct: false },
             { id: "plastic", text: "Plastic Shopping Bag", correct: true },
             { id: "eri", text: "Eri Warm Shawl", correct: false }
@@ -123,7 +125,7 @@ export default function AttentionGame({ patientId, onBack, onComplete }) {
   };
 
   if (rounds.length === 0) {
-    return <div className="p-8 text-center text-lg font-bold">Loading questions...</div>;
+    return <div className="p-8 text-center text-lg font-bold">{t("loading_questions")}</div>;
   }
 
   const currentRound = rounds[currentRoundIdx];
@@ -136,22 +138,22 @@ export default function AttentionGame({ patientId, onBack, onComplete }) {
           className="touch-target flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 border-2 border-stone-400 font-bold rounded-md text-stone-900"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span>{t("back")}</span>
         </button>
 
         <h2 className="text-2xl font-black text-stone-900">
-          Attention & Focus (মনোযোগ পৰীক্ষা)
+          {t("attention_game")}
         </h2>
 
         <span className="text-base font-bold bg-stone-100 px-3 py-1 border border-stone-300 rounded text-stone-800">
-          Round {currentRoundIdx + 1} / {rounds.length}
+          {t("round_label")} {currentRoundIdx + 1} / {rounds.length}
         </span>
       </div>
 
       {!isGameOver ? (
         <div className="max-w-xl mx-auto py-4">
           <div className="bg-stone-50 border-2 border-stone-300 p-5 rounded-lg mb-6 text-center">
-            <span className="text-xs font-bold text-red-700 uppercase tracking-wider block mb-1">Question</span>
+            <span className="text-xs font-bold text-red-700 uppercase tracking-wider block mb-1">{t("question_label")}</span>
             <h3 className="text-2xl font-black text-stone-900 leading-snug">
               {currentRound.prompt}
             </h3>
@@ -197,23 +199,23 @@ export default function AttentionGame({ patientId, onBack, onComplete }) {
         <div className="text-center py-10">
           <Award className="w-20 h-20 text-amber-600 mx-auto mb-4" />
           <h3 className="text-3xl font-black text-stone-900 mb-2">
-            অভিনন্দন! (Great Focus!)
+            {t("attention_win_title")}
           </h3>
           <p className="text-xl text-stone-700 mb-6 font-medium">
-            You scored {score} out of {rounds.length} in the visual attention test.
+            {t("attention_win_desc", { score: score, total: rounds.length })}
           </p>
           <div className="flex justify-center gap-4">
             <button
               onClick={loadGame}
               className="touch-target px-8 py-3 bg-red-700 hover:bg-red-800 text-white font-bold text-lg rounded-md border-2 border-red-900"
             >
-              Play Again
+              {t("play_again")}
             </button>
             <button
               onClick={onBack}
               className="touch-target px-8 py-3 bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold text-lg rounded-md border-2 border-stone-400"
             >
-              Return to Home
+              {t("return_home")}
             </button>
           </div>
         </div>

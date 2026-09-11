@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Lock, UserCheck, Delete, ArrowRight, ShieldAlert, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function PatientLoginPage({ onSwitchToCaregiver }) {
   const { loginPatient } = useAuth();
@@ -71,6 +72,7 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
 
   return (
     <div className="min-h-screen bg-patient-bg flex flex-col justify-between p-4 sm:p-6 text-stone-900">
+      <LanguageSwitcher floating />
       {/* Top Banner */}
       <div className="max-w-md w-full mx-auto text-center pt-4">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-100 border border-red-300 rounded-full text-red-900 font-bold text-sm mb-3">
@@ -78,7 +80,7 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
           <span>MDoNER • SIH26003 Dementia Care</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-black text-stone-900 tracking-tight mb-2">
-          স্মৃতি • Smriti
+          Smriti
         </h1>
         <p className="text-lg font-bold text-stone-700">
           {t("tagline")}
@@ -222,7 +224,7 @@ export default function PatientLoginPage({ onSwitchToCaregiver }) {
           className="touch-target inline-flex items-center gap-2 text-stone-700 font-bold text-base hover:text-stone-950 underline mb-3"
         >
           <UserCheck className="w-5 h-5 text-caregiver-primary" />
-          <span>Switch to Caregiver Portal (শুশ্ৰূষাকাৰী প'ৰ্টেল)</span>
+          <span>{t("switch_to_caregiver")}</span>
         </button>
 
         <p className="text-xs font-semibold text-stone-500">

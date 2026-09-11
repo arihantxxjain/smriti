@@ -5,10 +5,11 @@ import { useLanguage } from "../context/LanguageContext";
 import { api } from "../services/api";
 import AddPatientModal from "../components/caregiver/AddPatientModal";
 import CaregiverPatientDetail from "./CaregiverPatientDetail";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function CaregiverDashboard({ onSwitchToPatient }) {
   const { user, logout } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const [patients, setPatients] = useState([]);
   const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
@@ -54,7 +55,7 @@ export default function CaregiverDashboard({ onSwitchToPatient }) {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-caregiver flex items-center justify-center text-white font-bold text-lg">
-              স্মৃতি
+              Sm
             </div>
             <div>
               <h1 className="text-xl font-bold text-caregiver-primary">
@@ -67,26 +68,7 @@ export default function CaregiverDashboard({ onSwitchToPatient }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center bg-stone-100 border border-stone-300 rounded-lg p-0.5">
-              {[
-                { code: "en", label: "EN" },
-                { code: "hi", label: "हिंदी" },
-                { code: "as", label: "অসমীয়া" },
-                { code: "bn", label: "বাংলা" },
-                { code: "mni", label: "মৈতৈ" },
-              ].map((l) => (
-                <button
-                  key={l.code}
-                  data-testid={`caregiver-lang-${l.code}`}
-                  onClick={() => setLanguage(l.code)}
-                  className={`px-2.5 py-1 text-xs font-bold rounded ${
-                    language === l.code ? "bg-caregiver text-white" : "text-stone-700 hover:bg-stone-200"
-                  }`}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
+            <LanguageSwitcher />
 
             <button
               data-testid="caregiver-go-to-patient-btn"

@@ -151,13 +151,13 @@ export default function PatientDashboard() {
                   </div>
                   <div>
                     <span className="text-xs uppercase font-bold tracking-widest bg-red-900 px-2 py-0.5 rounded text-amber-200 inline-block mb-1">
-                      AI Voice Companion
+                      {t("ai_voice_companion")}
                     </span>
                     <h2 className="text-2xl sm:text-3xl font-black leading-tight">
                       {t("sathi_button")}
                     </h2>
                     <p className="text-base text-stone-100 font-medium mt-1">
-                      Tap to talk anytime in Assamese, Hindi, or English.
+                      {t("sathi_tagline")}
                     </p>
                   </div>
                 </div>
@@ -175,13 +175,13 @@ export default function PatientDashboard() {
                   </div>
                   <div>
                     <span className="text-xs uppercase font-bold tracking-widest bg-stone-800 px-2 py-0.5 rounded text-stone-300 inline-block mb-1">
-                      Family Album & Audio Stories
+                      {t("family_album_audio")}
                     </span>
                     <h2 className="text-2xl sm:text-3xl font-black leading-tight">
                       {t("memory_aids")}
                     </h2>
                     <p className="text-base text-stone-200 font-medium mt-1">
-                      Look at family photos with spoken voice stories.
+                      {t("memory_aids_tagline")}
                     </p>
                   </div>
                 </div>
@@ -218,7 +218,7 @@ export default function PatientDashboard() {
       {/* Accessible Footer with Compliance Note */}
       <footer className="bg-white border-t-4 border-stone-300 ner-gamusa-border-bottom p-4 text-center mt-8">
         <p className="text-sm font-bold text-stone-700">
-          স্মৃতি (Smriti) • Voice-First AI Dementia Care • Ministry of Development of North Eastern Region (MDoNER / SIH26003)
+          Smriti • Voice-First AI Dementia Care • Ministry of Development of North Eastern Region (MDoNER / SIH26003)
         </p>
         <p className="text-xs font-semibold text-stone-500 mt-1">
           {t("demo_data_notice")}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Lock, Mail, User, Phone, ArrowRight, ShieldCheck, HeartHandshake } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function CaregiverLoginPage({ onSwitchToPatient }) {
   const { loginCaregiver, registerCaregiver } = useAuth();
@@ -49,6 +50,7 @@ export default function CaregiverLoginPage({ onSwitchToPatient }) {
 
   return (
     <div className="min-h-screen bg-caregiver-bg text-stone-900 flex flex-col justify-between p-4 sm:p-6">
+      <LanguageSwitcher floating />
       {/* Header */}
       <div className="max-w-md w-full mx-auto text-center pt-6">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-caregiver/10 border border-caregiver/30 rounded-full text-caregiver font-bold text-sm mb-3">
@@ -198,7 +200,7 @@ export default function CaregiverLoginPage({ onSwitchToPatient }) {
           onClick={onSwitchToPatient}
           className="text-stone-700 font-bold text-sm hover:text-stone-950 underline mb-2 inline-block"
         >
-          Switch to Patient App (ৰোগী প্ৰৱেশ)
+          Switch to Patient App
         </button>
         <p className="text-xs text-stone-500">
           Demo data — not for clinical use.

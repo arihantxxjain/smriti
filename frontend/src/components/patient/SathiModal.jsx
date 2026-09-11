@@ -9,11 +9,7 @@ export default function SathiModal({ patientId, patientName = "Elder", isOpen, o
   const [messages, setMessages] = useState([
     {
       sender: "sathi",
-      text: language === "as" 
-        ? `নমস্কাৰ ${patientName} ডাঙৰীয়া! মই আপোনাৰ বন্ধু সাথী। আজি আপোনাৰ মনটো কেনে লাগিছে?` 
-        : (language === "hi" 
-            ? `नमस्ते ${patientName} जी! मैं आपका संगी साथी हूँ। आज आप कैसा महसूस कर रहे हैं?` 
-            : `Namaskar ${patientName}! I am your companion Sathi. How are you feeling today?`),
+      text: t("sathi_greeting", { name: patientName }),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -72,7 +68,7 @@ export default function SathiModal({ patientId, patientName = "Elder", isOpen, o
         language: language
       });
 
-      const replyText = res.reply || "মই সদায় আপোনাৰ লগত আছো। (I am always here with you.)";
+      const replyText = res.reply || t("sathi_default_reply");
       const sathiMsg = {
         sender: "sathi",
         text: replyText,
@@ -90,11 +86,7 @@ export default function SathiModal({ patientId, patientName = "Elder", isOpen, o
       playTTS(replyText);
     } catch (e) {
       // Calm static fallback message, NEVER raw error!
-      const fallbackText = language === "as"
-        ? "মই আপোনাৰ লগত আছো। আপুনি আপোনাৰ নিজৰ ঘৰতে সুৰক্ষিত আছে। চিন্তা নকৰিব।"
-        : (language === "hi"
-            ? "मैं आपके साथ हूँ। आप अपने घर पर सुरक्षित हैं। बिल्कुल चिंता न करें।"
-            : "I am right here with you. You are safe at home. Everything is well.");
+      const fallbackText = t("sathi_fallback");
 
       setMessages((prev) => [
         ...prev,
@@ -198,13 +190,13 @@ export default function SathiModal({ patientId, patientName = "Elder", isOpen, o
           <div className="bg-red-50 border-b-2 border-red-300 p-3 text-red-950 text-sm font-bold flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-700 flex-shrink-0" />
-              <span>Caregiver notified of discomfort or confusion. Reassuring support is active.</span>
+              <span>{t("caregiver_notified")}</span>
             </div>
             <button
               onClick={() => setDistressAlertNotice(false)}
               className="text-xs uppercase underline ml-2 text-red-800"
             >
-              Dismiss
+              {t("dismiss")}
             </button>
           </div>
         )}
@@ -233,7 +225,7 @@ export default function SathiModal({ patientId, patientName = "Elder", isOpen, o
               >
                 <div className="flex items-center justify-between gap-4 mb-1">
                   <span className="text-xs font-bold uppercase tracking-wider opacity-75">
-                    {msg.sender === "patient" ? patientName : "Sathi (সাথী)"}
+                    {msg.sender === "patient" ? patientName : "Sathi"}
                   </span>
                   <span className="text-xs opacity-60 font-mono">{msg.time}</span>
                 </div>
@@ -245,7 +237,7 @@ export default function SathiModal({ patientId, patientName = "Elder", isOpen, o
                     className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-red-800 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded border border-red-300"
                   >
                     <Volume2 className="w-4 h-4" />
-                    <span>{isSpeaking ? "Reading…" : "Hear Audio"}</span>
+                    <span>{isSpeaking ? t("reading") : t("hear_audio")}</span>
                   </button>
                 )}
               </div>
@@ -255,7 +247,7 @@ export default function SathiModal({ patientId, patientName = "Elder", isOpen, o
           {isSending && (
             <div className="flex justify-start">
               <div className="bg-white p-3 rounded-lg border-2 border-stone-300 text-sm font-bold text-stone-600 animate-pulse">
-                Sathi is responding...
+                {t("sathi_responding")}
               </div>
             </div>
           )}

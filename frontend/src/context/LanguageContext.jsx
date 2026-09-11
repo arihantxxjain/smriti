@@ -5,16 +5,22 @@ const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem("smriti_language") || "as";
+    return localStorage.getItem("smriti_language") || "en";
   });
 
   useEffect(() => {
     localStorage.setItem("smriti_language", language);
   }, [language]);
 
-  const t = (key) => {
+  const t = (key, vars) => {
     const langDict = translations[language] || translations.en;
-    return langDict[key] || translations.en[key] || key;
+    let str = langDict[key] || translations.en[key] || key;
+    if (vars && typeof str === "string") {
+      Object.keys(vars).forEach((k) => {
+        str = str.replace(new RegExp(`\\{${k}\\}`, "g"), vars[k]);
+      });
+    }
+    return str;
   };
 
   return (

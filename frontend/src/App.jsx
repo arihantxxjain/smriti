@@ -16,7 +16,7 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-patient-bg flex flex-col items-center justify-center p-4">
-        <div className="text-4xl font-black text-red-700 mb-2 animate-pulse">স্মৃতি • Smriti</div>
+        <div className="text-4xl font-black text-red-700 mb-2 animate-pulse">Smriti</div>
         <p className="text-stone-600 font-bold text-sm">Loading dementia care workspace...</p>
       </div>
     );

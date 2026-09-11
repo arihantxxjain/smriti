@@ -5,7 +5,6 @@ import { offlineStorage } from "../../../services/offlineStorage";
 import { bhashiniService } from "../../../services/bhashini";
 import { useLanguage } from "../../../context/LanguageContext";
 
-// High-resolution real cultural imagery representations
 const OBJECT_IMAGES = {
   gamosa: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600&auto=format&fit=crop&q=80",
   assam_tea: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80",
@@ -17,7 +16,7 @@ const OBJECT_IMAGES = {
 };
 
 export default function RecognitionGame({ patientId, onBack, onComplete }) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [objects, setObjects] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [options, setOptions] = useState([]);
@@ -40,12 +39,11 @@ export default function RecognitionGame({ patientId, onBack, onComplete }) {
         setupRound(config.objects, 0);
       }
     } catch (e) {
-      // Offline fallback
       const fallback = [
-        { id: "gamosa", name: "Gamusa (গামোচা)", english: "Gamosa", hints: ["Red and white woven cloth", "Worn in Rongali Bihu"] },
-        { id: "assam_tea", name: "Chah (অসম চাহ)", english: "Assam Tea", hints: ["Warm morning cup", "Grown in Assam tea gardens"] },
-        { id: "jackfruit", name: "Kothal (কঁঠাল)", english: "Jackfruit", hints: ["Large sweet orchard fruit", "Golden sweet bulbs"] },
-        { id: "bihu_dhol", name: "Dhol (ঢোল)", english: "Bihu Dhol", hints: ["Folk drum played in Bihu"] }
+        { id: "gamosa", name: "Gamosa", english: "Gamosa", hints: ["Red and white woven cloth", "Worn in Rongali Bihu"] },
+        { id: "assam_tea", name: "Assam Tea", english: "Assam Tea", hints: ["Warm morning cup", "Grown in Assam tea gardens"] },
+        { id: "jackfruit", name: "Jackfruit", english: "Jackfruit", hints: ["Large sweet orchard fruit", "Golden sweet bulbs"] },
+        { id: "bihu_dhol", name: "Bihu Dhol", english: "Bihu Dhol", hints: ["Folk drum played in Bihu"] }
       ];
       setObjects(fallback);
       setupRound(fallback, 0);
@@ -142,7 +140,7 @@ export default function RecognitionGame({ patientId, onBack, onComplete }) {
   };
 
   if (objects.length === 0) {
-    return <div className="p-8 text-center text-lg font-bold">Loading cultural objects...</div>;
+    return <div className="p-8 text-center text-lg font-bold">{t("loading_objects")}</div>;
   }
 
   const currentObj = objects[currentIdx];
@@ -156,21 +154,20 @@ export default function RecognitionGame({ patientId, onBack, onComplete }) {
           className="touch-target flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 border-2 border-stone-400 font-bold rounded-md text-stone-900"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span>{t("back")}</span>
         </button>
 
         <h2 className="text-2xl font-black text-stone-900">
-          Cultural Recognition (চিনাকি বস্তুৰ খেল)
+          {t("recognition_game")}
         </h2>
 
         <span className="text-base font-bold bg-stone-100 px-3 py-1 border border-stone-300 rounded text-stone-800">
-          Item {currentIdx + 1} / {objects.length}
+          {t("item_label")} {currentIdx + 1} / {objects.length}
         </span>
       </div>
 
       {!isGameOver ? (
         <div className="max-w-xl mx-auto">
-          {/* Object Photo */}
           <div className="border-4 border-stone-400 rounded-lg overflow-hidden mb-6 bg-stone-100 flex flex-col items-center">
             <img
               src={photoUrl}
@@ -178,18 +175,17 @@ export default function RecognitionGame({ patientId, onBack, onComplete }) {
               className="w-full h-64 object-cover"
             />
             <div className="w-full p-3 bg-stone-50 border-t-2 border-stone-300 flex items-center justify-between">
-              <span className="text-stone-700 font-bold text-sm">Look closely: What is this traditional item?</span>
+              <span className="text-stone-700 font-bold text-sm">{t("look_closely")}</span>
               <button
                 onClick={speakHint}
                 className="touch-target p-2 text-stone-700 hover:text-red-700 flex items-center gap-1 font-bold text-xs bg-stone-200 hover:bg-stone-300 rounded"
               >
                 <Volume2 className="w-4 h-4" />
-                <span>Hear Clue</span>
+                <span>{t("hear_clue")}</span>
               </button>
             </div>
           </div>
 
-          {/* Options */}
           <div className="space-y-3 mb-4">
             {options.map((opt) => {
               let btnStyle = "bg-white border-stone-400 text-stone-900 hover:border-red-600 hover:bg-stone-50";
@@ -224,23 +220,23 @@ export default function RecognitionGame({ patientId, onBack, onComplete }) {
         <div className="text-center py-10">
           <Award className="w-20 h-20 text-amber-600 mx-auto mb-4" />
           <h3 className="text-3xl font-black text-stone-900 mb-2">
-            সাধুবাদ! (Recognition Complete)
+            {t("recog_win_title")}
           </h3>
           <p className="text-xl text-stone-700 mb-6 font-medium">
-            You accurately recognized <strong>{score} out of {objects.length}</strong> North Eastern cultural objects.
+            {t("recog_win_desc", { score: score, total: objects.length })}
           </p>
           <div className="flex justify-center gap-4">
             <button
               onClick={loadGame}
               className="touch-target px-8 py-3 bg-red-700 hover:bg-red-800 text-white font-bold text-lg rounded-md border-2 border-red-900"
             >
-              Play Again
+              {t("play_again")}
             </button>
             <button
               onClick={onBack}
               className="touch-target px-8 py-3 bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold text-lg rounded-md border-2 border-stone-400"
             >
-              Return to Home
+              {t("return_home")}
             </button>
           </div>
         </div>

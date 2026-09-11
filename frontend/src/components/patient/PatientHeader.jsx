@@ -5,6 +5,7 @@ import { useOffline } from "../../context/OfflineContext";
 import { useAuth } from "../../context/AuthContext";
 import { formatISTDate, getISTCurrentTimeString } from "../../utils/dateUtils";
 import SOSButton from "./SOSButton";
+import LanguageSwitcher from "../LanguageSwitcher";
 
 export default function PatientHeader({ patientName = "Elder", patientCode = "", emergencyContact, emergencyName }) {
   const { language, setLanguage, t } = useLanguage();
@@ -71,54 +72,7 @@ export default function PatientHeader({ patientName = "Elder", patientCode = "",
         {/* Right: Language switch + Persistent SOS + Logout */}
         <div className="flex items-center flex-wrap gap-3">
           {/* Language Selector */}
-          <div className="flex items-center bg-stone-100 border-2 border-stone-300 rounded-md p-1">
-            <Globe className="w-4 h-4 text-stone-600 ml-1.5 mr-1" />
-            <button
-              data-testid="lang-as"
-              onClick={() => setLanguage("as")}
-              className={`touch-target px-3 py-2 text-base font-bold rounded ${
-                language === "as" ? "bg-red-700 text-white" : "text-stone-800 hover:bg-stone-200"
-              }`}
-            >
-              অসমীয়া
-            </button>
-            <button
-              data-testid="lang-bn"
-              onClick={() => setLanguage("bn")}
-              className={`touch-target px-3 py-2 text-base font-bold rounded ${
-                language === "bn" ? "bg-red-700 text-white" : "text-stone-800 hover:bg-stone-200"
-              }`}
-            >
-              বাংলা
-            </button>
-            <button
-              data-testid="lang-mni"
-              onClick={() => setLanguage("mni")}
-              className={`touch-target px-3 py-2 text-base font-bold rounded ${
-                language === "mni" ? "bg-red-700 text-white" : "text-stone-800 hover:bg-stone-200"
-              }`}
-            >
-              মৈতৈ
-            </button>
-            <button
-              data-testid="lang-en"
-              onClick={() => setLanguage("en")}
-              className={`touch-target px-3 py-2 text-base font-bold rounded ${
-                language === "en" ? "bg-red-700 text-white" : "text-stone-800 hover:bg-stone-200"
-              }`}
-            >
-              EN
-            </button>
-            <button
-              data-testid="lang-hi"
-              onClick={() => setLanguage("hi")}
-              className={`touch-target px-3 py-2 text-base font-bold rounded ${
-                language === "hi" ? "bg-red-700 text-white" : "text-stone-800 hover:bg-stone-200"
-              }`}
-            >
-              हिंदी
-            </button>
-          </div>
+          <LanguageSwitcher />
 
           {/* Persistent Top-Right SOS Button */}
           <SOSButton

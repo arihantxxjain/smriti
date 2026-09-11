@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, ArrowUp, ArrowDown, CheckCircle, RotateCcw, Sun, Coffee, Pill, Utensils, Footprints, Moon } from "lucide-react";
 import { api } from "../../../services/api";
 import { offlineStorage } from "../../../services/offlineStorage";
+import { useLanguage } from "../../../context/LanguageContext";
 
 const STEP_ICONS = {
   Sun: Sun,
@@ -13,6 +14,7 @@ const STEP_ICONS = {
 };
 
 export default function RoutineSequencingGame({ patientId, onBack, onComplete }) {
+  const { t } = useLanguage();
   const [steps, setSteps] = useState([]);
   const [startTime, setStartTime] = useState(Date.now());
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -26,7 +28,6 @@ export default function RoutineSequencingGame({ patientId, onBack, onComplete })
     try {
       const config = await api.getGameConfig(patientId, "daily_routine", "medium");
       if (config.steps) {
-        // Scramble order for the challenge
         const scrambled = [...config.steps].sort(() => Math.random() - 0.5);
         setSteps(scrambled);
       }
@@ -61,7 +62,6 @@ export default function RoutineSequencingGame({ patientId, onBack, onComplete })
     setIsSubmitted(true);
     const reactionTime = Date.now() - startTime;
 
-    // Calculate how many items are in correct relative or absolute order
     let correctCount = 0;
     steps.forEach((step, idx) => {
       if (step.order === idx + 1) {
@@ -111,11 +111,11 @@ export default function RoutineSequencingGame({ patientId, onBack, onComplete })
           className="touch-target flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 border-2 border-stone-400 font-bold rounded-md text-stone-900"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span>{t("back")}</span>
         </button>
 
         <h2 className="text-2xl font-black text-stone-900">
-          Daily Routine Sequencing (দৈনিক কামৰ ক্ৰম)
+          {t("routine_game")}
         </h2>
 
         <button
@@ -123,14 +123,14 @@ export default function RoutineSequencingGame({ patientId, onBack, onComplete })
           className="touch-target flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 border-2 border-stone-400 font-bold rounded-md text-stone-900"
         >
           <RotateCcw className="w-5 h-5" />
-          <span>Reset</span>
+          <span>{t("reset")}</span>
         </button>
       </div>
 
       {!isSubmitted ? (
         <>
           <p className="text-lg font-medium text-stone-700 mb-6 text-center">
-            Use the Up and Down arrows to arrange your daily activities in order from morning to bedtime.
+            {t("routine_instructions")}
           </p>
 
           <div className="space-y-3 max-w-xl mx-auto mb-8">
@@ -183,7 +183,7 @@ export default function RoutineSequencingGame({ patientId, onBack, onComplete })
               onClick={handleCheckOrder}
               className="touch-target-lg px-10 py-4 bg-red-700 hover:bg-red-800 text-white font-black text-xl rounded-lg border-2 border-red-950"
             >
-              Check My Routine (ক্ৰম পৰীক্ষা কৰক)
+              {t("check_routine")}
             </button>
           </div>
         </>
@@ -191,23 +191,23 @@ export default function RoutineSequencingGame({ patientId, onBack, onComplete })
         <div className="text-center py-10">
           <CheckCircle className="w-20 h-20 text-emerald-700 mx-auto mb-4" />
           <h3 className="text-3xl font-black text-stone-900 mb-2">
-            সুন্দৰ! (Routine Completed)
+            {t("routine_win_title")}
           </h3>
           <p className="text-xl text-stone-700 mb-6 font-medium">
-            Cognitive Sequencing Score: <strong>{score} / 100</strong>.
+            {t("routine_win_desc", { score: score })}
           </p>
           <div className="flex justify-center gap-4">
             <button
               onClick={loadGame}
               className="touch-target px-8 py-3 bg-red-700 hover:bg-red-800 text-white font-bold text-lg rounded-md border-2 border-red-900"
             >
-              Try Again
+              {t("try_again")}
             </button>
             <button
               onClick={onBack}
               className="touch-target px-8 py-3 bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold text-lg rounded-md border-2 border-stone-400"
             >
-              Return to Home
+              {t("return_home")}
             </button>
           </div>
         </div>

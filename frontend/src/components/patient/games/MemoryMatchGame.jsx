@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Shirt, Coffee, Apple, Home, Feather, Music, Crown, ArrowLeft, RotateCcw, CheckCircle } from "lucide-react";
 import { api } from "../../../services/api";
 import { offlineStorage } from "../../../services/offlineStorage";
+import { useLanguage } from "../../../context/LanguageContext";
 
 const ICON_MAP = {
   Shirt: Shirt,
@@ -20,6 +21,7 @@ const CARD_ART = {
 };
 
 export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
+  const { t } = useLanguage();
   const [cards, setCards] = useState([]);
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [matchedIds, setMatchedIds] = useState([]);
@@ -37,19 +39,17 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
     try {
       const config = await api.getGameConfig(patientId, "memory_match", "medium");
       if (config.cards) {
-        // Shuffle cards
         const shuffled = [...config.cards].sort(() => Math.random() - 0.5);
         setCards(shuffled);
       }
     } catch (e) {
-      // Fallback offline card set
       const defaultCards = [
-        { id: "g1", pair_id: "gamusa", name: "Gamusa", icon: "Shirt" },
-        { id: "g2", pair_id: "gamusa", name: "Gamusa", icon: "Shirt" },
+        { id: "g1", pair_id: "gamusa", name: "Gamosa", icon: "Shirt" },
+        { id: "g2", pair_id: "gamusa", name: "Gamosa", icon: "Shirt" },
         { id: "t1", pair_id: "tea", name: "Assam Tea", icon: "Coffee" },
         { id: "t2", pair_id: "tea", name: "Assam Tea", icon: "Coffee" },
-        { id: "j1", pair_id: "jackfruit", name: "Kothal", icon: "Apple" },
-        { id: "j2", pair_id: "jackfruit", name: "Kothal", icon: "Apple" },
+        { id: "j1", pair_id: "jackfruit", name: "Jackfruit", icon: "Apple" },
+        { id: "j2", pair_id: "jackfruit", name: "Jackfruit", icon: "Apple" },
         { id: "d1", pair_id: "dhol", name: "Bihu Dhol", icon: "Music" },
         { id: "d2", pair_id: "dhol", name: "Bihu Dhol", icon: "Music" }
       ].sort(() => Math.random() - 0.5);
@@ -93,7 +93,6 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
         setMatchedIds(newMatched);
         setFlippedIndices([]);
 
-        // Check completion (all pairs matched)
         const totalPairs = cards.length / 2;
         if (newMatched.length === totalPairs) {
           finishGame(newMatched.length, totalPairs, flipsCount + 1, nextResponses);
@@ -125,14 +124,14 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
     try {
       if (navigator.onLine) {
         await api.submitGame(submitPayload);
-        setSaveStatus("Your result was saved for your caregiver.");
+        setSaveStatus(t("result_saved"));
       } else {
         offlineStorage.queueGameSubmit(submitPayload);
-        setSaveStatus("Your result is safely queued and will sync when the internet returns.");
+        setSaveStatus(t("result_queued"));
       }
     } catch (e) {
       offlineStorage.queueGameSubmit(submitPayload);
-      setSaveStatus("Your result is safely queued and will sync when the internet returns.");
+      setSaveStatus(t("result_queued"));
     }
 
     if (onComplete) onComplete(compositeScore);
@@ -148,11 +147,11 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
           className="touch-target flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 border-2 border-stone-400 font-bold rounded-md text-stone-900"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back to Home</span>
+          <span>{t("back_home")}</span>
         </button>
 
         <h2 className="text-2xl font-black text-stone-900">
-          Memory Match (স্মৃতি মিলোৱা খেল)
+          {t("memory_match")}
         </h2>
 
         <button
@@ -161,14 +160,14 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
           className="touch-target flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 border-2 border-stone-400 font-bold rounded-md text-stone-900"
         >
           <RotateCcw className="w-5 h-5" />
-          <span>Restart</span>
+          <span>{t("restart")}</span>
         </button>
       </div>
 
       {!isFinished ? (
         <>
           <p className="text-lg font-medium text-stone-700 mb-3 text-center">
-            Tap two cards to reveal their cultural picture and name. Find the matching pair.
+            {t("mm_instructions")}
           </p>
 
           <div className="mb-6 flex flex-wrap justify-center gap-2 text-sm font-bold text-stone-700" aria-label="Cultural pictures used in this game">
@@ -212,7 +211,7 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
                   ) : (
                     <div className="flex flex-col items-center justify-center">
                       <span className="text-3xl font-black text-amber-300 mb-1">Smriti</span>
-                      <span className="text-xs font-bold uppercase tracking-widest text-stone-200">Tap to Flip</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-stone-200">{t("tap_to_flip")}</span>
                     </div>
                   )}
                 </button>
@@ -221,17 +220,17 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
           </div>
 
           <div className="mt-8 text-center text-base font-bold text-stone-600">
-            Pairs Matched: {matchedIds.length} / {cards.length / 2} • Total Flips: {flipsCount}
+            {t("pairs_matched")}: {matchedIds.length} / {cards.length / 2} • {t("total_flips")}: {flipsCount}
           </div>
         </>
       ) : (
         <div className="text-center py-10">
           <CheckCircle className="w-20 h-20 text-emerald-700 mx-auto mb-4" />
           <h3 className="text-3xl font-black text-stone-900 mb-2">
-            অপূৰ্ব! সকলো যোৰ মিলিল (Well Done!)
+            {t("mm_win_title")}
           </h3>
           <p className="text-xl text-stone-700 mb-6 font-medium">
-            You matched all North Eastern cultural cards in {flipsCount} flips.
+            {t("mm_win_desc", { flips: flipsCount })}
           </p>
           {saveStatus && <p className="mb-6 rounded-lg border-2 border-emerald-500 bg-emerald-50 p-3 font-bold text-emerald-950" role="status">{saveStatus}</p>}
           <div className="flex justify-center gap-4">
@@ -239,13 +238,13 @@ export default function MemoryMatchGame({ patientId, onBack, onComplete }) {
               onClick={loadGame}
               className="touch-target px-8 py-3 bg-red-700 hover:bg-red-800 text-white font-bold text-lg rounded-md border-2 border-red-900"
             >
-              Play Again
+              {t("play_again")}
             </button>
             <button
               onClick={onBack}
               className="touch-target px-8 py-3 bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold text-lg rounded-md border-2 border-stone-400"
             >
-              Return to Home
+              {t("return_home")}
             </button>
           </div>
         </div>

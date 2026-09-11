@@ -119,7 +119,7 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
         }`}
       >
         <AlertTriangle className="w-6 h-6 animate-pulse" />
-        <span>{debounceSeconds > 0 ? `SOS Active (${debounceSeconds}s)` : t("sos_button")}</span>
+        <span>{debounceSeconds > 0 ? `${t("sos_active")} (${debounceSeconds}s)` : t("sos_button")}</span>
       </button>
 
       {isOpen && (
@@ -131,7 +131,7 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
         >
           <div className="bg-white border-4 border-red-700 rounded-lg max-w-lg w-full p-6 text-patient-text ner-gamusa-border-top">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <span className="rounded-full border border-amber-400 bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-950">Demo mode — no real SMS is sent</span>
+              <span className="rounded-full border border-amber-400 bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-950">{t("demo_no_sms")}</span>
               <button onClick={() => setIsOpen(false)} disabled={isSending} className="touch-target rounded border-2 border-stone-300 p-2 text-stone-700" aria-label="Close emergency alert dialog"><X className="h-5 w-5" /></button>
             </div>
             {!sentSuccess ? (
@@ -147,7 +147,7 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
 
                 <div className="bg-amber-50 border-2 border-amber-300 p-3 rounded mb-6 text-sm flex items-center gap-2 text-amber-950 font-medium">
                   <MapPin className="w-5 h-5 flex-shrink-0 text-amber-700" />
-                  <span>GPS location will be automatically shared with {emergencyName}. If GPS is off, alert will note "location unavailable".</span>
+                  <span>{t("gps_note", { name: emergencyName })}</span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -182,10 +182,10 @@ export default function SOSButton({ patientId, emergencyContact = "+91 98640 112
               <div className="text-center py-6">
                 <CheckCircle className="w-16 h-16 text-green-700 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold text-green-800 mb-2">{t("sos_sent")}</h3>
-                <p className="text-stone-700 text-base mb-2">Simulated SMS dispatched to: <strong>{smsStatus}</strong></p>
+                <p className="text-stone-700 text-base mb-2">{t("sms_dispatched")} <strong>{smsStatus}</strong></p>
                 <div className="inline-flex items-center gap-2 text-stone-600 bg-stone-100 px-4 py-2 rounded text-sm mt-3">
                   <Clock className="w-4 h-4" />
-                  <span>Debounce active: 60s security cooldown</span>
+                  <span>{t("debounce_note")}</span>
                 </div>
               </div>
             )}
